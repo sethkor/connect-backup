@@ -19,7 +19,7 @@ Commands:
     backup your instance
 ```
 
-## Getting lexbelt
+## Getting connect-backup
 Easiest way to install if you're on a Mac or Linux (amd64 or arm64)  is to use [Homebrew](https://brew.sh/)
 
 Type:
