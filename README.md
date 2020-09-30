@@ -51,9 +51,9 @@ is not there it will create it on the fly:
 ```
 your-connect-backup-workspace
    ├──flows
-   ├──profiles
+   ├──routing-profiles
    ├──users
-   └──heirarchy
+   └──user-hierarchy-groups
 
 ````
 # What about Queues?
