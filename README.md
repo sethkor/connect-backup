@@ -1,5 +1,5 @@
 # connect-backup
-A tool to backup and (eventually) restore AWS Connect
+A tool to backup and (eventually) restore AWS Connect.  You can backup to file, S3 or just to stout.
 
 ```
 A tool to backup and restore your AWS Connect instance
@@ -41,10 +41,21 @@ Let me know if you would like a particular os/arch binary regularly built.
 
 # What is included in the backup
 - [X] Published Call Flows
-- [ ] Routing Profiles
-- [ ] User Data (except Passwords)
-- [ ] User Hierarchy Groups and Structure
+- [X] Routing Profiles
+- [X] User Data (except Passwords)
+- [X] User Hierarchy Groups
+- [ ] User Hierarchy 
 
+connect-backup use a directory/prefix (see what I did there?) structure so everything is neat and tidy.  If the structure
+is not there it will create it on the fly:
+```
+your-connect-backup-workspace
+   ├──flows
+   ├──profiles
+   ├──users
+   └──heirarchy
+
+````
 # What about Queues?
 Currently there is no API call to describe or create queues.  When the API becomes available, Ill add it.
 

@@ -15,8 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+const flowsPrefix = "flows"
+
 type Writer interface {
-	write(result connect.ContactFlow) error
+	write(result interface{}) error
 }
 
 type FileWriter struct {
@@ -31,35 +33,92 @@ type S3Writer struct {
 type StdoutWriter struct {
 }
 
-func (fw *FileWriter) write(result connect.ContactFlow) error {
-	//for each contact flow, write to a file with the name contact flow.
+const (
+	flows                  = "flows"
+	routingProfiles        = "routing-profiles"
+	user                   = "users"
+	userHierarchyGroup     = "user-hierarchy-groups"
+	userHierarchyStructure = "user-hierarchy-structures"
+	unknown                = "unknown"
+	pathSeparator          = string(os.PathSeparator)
+)
 
-	ioutil.WriteFile(fw.Path+string(os.PathSeparator)+*result.Name, []byte(*result.Content), 0644)
-	return nil
+func getElement(result interface{}) (string, string, error) {
+
+	var objectPrefix, element string
+
+	switch result.(type) {
+	case connect.ContactFlow:
+		objectPrefix = flows + "/" + *result.(connect.ContactFlow).Name
+		element = result.(connect.ContactFlow).String()
+	case connect.RoutingProfile:
+		objectPrefix = routingProfiles + "/" + *result.(connect.RoutingProfile).Name
+		element = result.(connect.RoutingProfile).String()
+	case connect.User:
+		objectPrefix = user + "/" + *result.(connect.User).Username
+		element = result.(connect.User).String()
+	case connect.HierarchyGroup:
+		objectPrefix = userHierarchyGroup + "/" + *result.(connect.HierarchyGroup).Name
+		element = result.(connect.HierarchyGroup).String()
+	//case connect.HierarchyStructure:
+	//	objectPrefix = userHierarchyStructure+"/"+*result.(connect.HierarchyStructure).
+	//	element = result.(connect.HierarchyStructure).String()
+	default:
+		return "", "", errors.New("unexpected type passed to writer")
+	}
+	return objectPrefix, element, nil
 }
 
-func (s3w *S3Writer) write(result connect.ContactFlow) error {
+func (fw *FileWriter) InitDirs() {
+	//ensure the needed child dirs are present
+	os.Mkdir(fw.Path+pathSeparator+flows, 0744)
+	os.Mkdir(fw.Path+pathSeparator+routingProfiles, 0744)
+	os.Mkdir(fw.Path+pathSeparator+user, 0744)
+	os.Mkdir(fw.Path+pathSeparator+userHierarchyGroup, 0744)
+}
+
+func (fw *FileWriter) write(result interface{}) error {
+	//for each contact flow, write to a file with the name contact flow.
+
+	filePrefix, element, err := getElement(result)
+
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(fw.Path+string(os.PathSeparator)+filePrefix, []byte(element), 0644)
+}
+
+func (s3w *S3Writer) write(result interface{}) error {
 	if s3w.Destination.Scheme != "s3" {
 		return errors.New("URL passes is not for S3")
 	}
 
 	svc := s3.New(s3w.Sess)
 
-	_, err := svc.PutObject(&s3.PutObjectInput{
-		ACL:    aws.String(s3.ObjectCannedACLBucketOwnerFullControl),
-		Bucket: aws.String(s3w.Destination.Host),
-		Body:   bytes.NewReader([]byte(result.String())),
-		Key:    aws.String(s3w.Destination.Path + *result.Name),
-	})
+	objectPrefix, element, err := getElement(result)
 
 	if err != nil {
 		return err
 	}
-	return nil
+
+	_, err = svc.PutObject(&s3.PutObjectInput{
+		ACL:    aws.String(s3.ObjectCannedACLBucketOwnerFullControl),
+		Bucket: aws.String(s3w.Destination.Host),
+		Body:   bytes.NewReader([]byte(element)),
+		Key:    aws.String(s3w.Destination.Path + "/" + objectPrefix),
+	})
+
+	return err
 }
 
-func (*StdoutWriter) write(result connect.ContactFlow) error {
+func (*StdoutWriter) write(result interface{}) error {
 
-	fmt.Println(result)
+	_, element, err := getElement(result)
+
+	if err != nil {
+		return err
+	}
+	fmt.Println(element)
 	return nil
 }
