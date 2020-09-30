@@ -18,7 +18,7 @@ var (
 
 	pBackupCommand = app.Command("backup", "backup your instance")
 	pFile          = pBackupCommand.Flag("file", "write output to file with the provided path").ExistingDir()
-	pS3            = pBackupCommand.Flag("s3", "write file to S3 destination with path").URL()
+	pS3            = pBackupCommand.Flag("s3", "write file to S3 destination with path as a url").URL()
 )
 
 var (
@@ -72,7 +72,8 @@ func main() {
 		var theWriter connect_backup.Writer = &connect_backup.StdoutWriter{}
 		if *pFile != "" {
 			theWriter = &connect_backup.FileWriter{Path: *pFile}
-		} else if pS3 != nil {
+			theWriter.(*connect_backup.FileWriter).InitDirs()
+		} else if *pS3 != nil {
 			theWriter = &connect_backup.S3Writer{Destination: *(*pS3), Sess: sess}
 		}
 		connect_backup.Backup(svc, *pInstance, theWriter)
