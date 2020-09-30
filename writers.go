@@ -39,8 +39,10 @@ const (
 	user                   = "users"
 	userHierarchyGroup     = "user-hierarchy-groups"
 	userHierarchyStructure = "user-hierarchy-structures"
+	common                 = "common"
 	unknown                = "unknown"
 	pathSeparator          = string(os.PathSeparator)
+	jsonExtn               = ".json"
 )
 
 func getElement(result interface{}) (string, string, error) {
@@ -49,20 +51,20 @@ func getElement(result interface{}) (string, string, error) {
 
 	switch result.(type) {
 	case connect.ContactFlow:
-		objectPrefix = flows + "/" + *result.(connect.ContactFlow).Name
+		objectPrefix = flows + "/" + *result.(connect.ContactFlow).Name + jsonExtn
 		element = result.(connect.ContactFlow).String()
 	case connect.RoutingProfile:
-		objectPrefix = routingProfiles + "/" + *result.(connect.RoutingProfile).Name
+		objectPrefix = routingProfiles + "/" + *result.(connect.RoutingProfile).Name + jsonExtn
 		element = result.(connect.RoutingProfile).String()
 	case connect.User:
 		objectPrefix = user + "/" + *result.(connect.User).Username
 		element = result.(connect.User).String()
 	case connect.HierarchyGroup:
-		objectPrefix = userHierarchyGroup + "/" + *result.(connect.HierarchyGroup).Name
+		objectPrefix = userHierarchyGroup + "/" + *result.(connect.HierarchyGroup).Name + jsonExtn
 		element = result.(connect.HierarchyGroup).String()
-	//case connect.HierarchyStructure:
-	//	objectPrefix = userHierarchyStructure+"/"+*result.(connect.HierarchyStructure).
-	//	element = result.(connect.HierarchyStructure).String()
+	case connect.HierarchyStructure:
+		objectPrefix = common + "/" + userHierarchyStructure + jsonExtn
+		element = result.(connect.HierarchyStructure).String()
 	default:
 		return "", "", errors.New("unexpected type passed to writer")
 	}
@@ -75,6 +77,7 @@ func (fw *FileWriter) InitDirs() {
 	os.Mkdir(fw.Path+pathSeparator+routingProfiles, 0744)
 	os.Mkdir(fw.Path+pathSeparator+user, 0744)
 	os.Mkdir(fw.Path+pathSeparator+userHierarchyGroup, 0744)
+	os.Mkdir(fw.Path+pathSeparator+common, 0744)
 }
 
 func (fw *FileWriter) write(result interface{}) error {

@@ -76,7 +76,8 @@ func main() {
 		} else if *pS3 != nil {
 			theWriter = &connect_backup.S3Writer{Destination: *(*pS3), Sess: sess}
 		}
-		connect_backup.Backup(svc, *pInstance, theWriter)
+		cb := connect_backup.ConnectBackup{ConnectInstanceId: pInstance}
+		cb.Backup(svc, theWriter)
 	}
 
 }

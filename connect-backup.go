@@ -3,12 +3,15 @@ package connect_backup
 import (
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
 )
 
-func backupFlows(svc *connect.Connect, instanceId string, theWriter Writer) {
-	connectInstanceId := aws.String(instanceId)
+type ConnectBackup struct {
+	ConnectInstanceId *string
+}
+
+func (cb ConnectBackup) backupFlows(svc *connect.Connect, theWriter Writer) {
+	connectInstanceId := cb.ConnectInstanceId
 	_ = svc.ListContactFlowsPages(&connect.ListContactFlowsInput{
 		InstanceId: connectInstanceId,
 	}, func(output *connect.ListContactFlowsOutput, b bool) bool {
@@ -30,8 +33,8 @@ func backupFlows(svc *connect.Connect, instanceId string, theWriter Writer) {
 	})
 }
 
-func backupUsers(svc *connect.Connect, instanceId string, theWriter Writer) {
-	connectInstanceId := aws.String(instanceId)
+func (cb ConnectBackup) backupUsers(svc *connect.Connect, theWriter Writer) {
+	connectInstanceId := cb.ConnectInstanceId
 	_ = svc.ListUsersPages(&connect.ListUsersInput{
 		InstanceId: connectInstanceId,
 	}, func(output *connect.ListUsersOutput, b bool) bool {
@@ -54,8 +57,8 @@ func backupUsers(svc *connect.Connect, instanceId string, theWriter Writer) {
 	})
 }
 
-func backupUserHierarchyGroups(svc *connect.Connect, instanceId string, theWriter Writer) {
-	connectInstanceId := aws.String(instanceId)
+func (cb ConnectBackup) backupUserHierarchyGroups(svc *connect.Connect, theWriter Writer) {
+	connectInstanceId := cb.ConnectInstanceId
 	_ = svc.ListUserHierarchyGroupsPages(&connect.ListUserHierarchyGroupsInput{
 		InstanceId: connectInstanceId,
 	}, func(output *connect.ListUserHierarchyGroupsOutput, b bool) bool {
@@ -78,8 +81,22 @@ func backupUserHierarchyGroups(svc *connect.Connect, instanceId string, theWrite
 	})
 }
 
-func backupRoutingProfile(svc *connect.Connect, instanceId string, theWriter Writer) {
-	connectInstanceId := aws.String(instanceId)
+func (cb ConnectBackup) backupUserHierarchyStructure(svc *connect.Connect, theWriter Writer) {
+	connectInstanceId := cb.ConnectInstanceId
+
+	result, _ := svc.DescribeUserHierarchyStructure(&connect.DescribeUserHierarchyStructureInput{
+		InstanceId: connectInstanceId,
+	})
+
+	err := theWriter.write(*result.HierarchyStructure)
+
+	if err != nil {
+		os.Exit(1)
+	}
+}
+
+func (cb ConnectBackup) backupRoutingProfile(svc *connect.Connect, theWriter Writer) {
+	connectInstanceId := cb.ConnectInstanceId
 	_ = svc.ListRoutingProfilesPages(&connect.ListRoutingProfilesInput{
 		InstanceId: connectInstanceId,
 	}, func(output *connect.ListRoutingProfilesOutput, b bool) bool {
@@ -102,11 +119,11 @@ func backupRoutingProfile(svc *connect.Connect, instanceId string, theWriter Wri
 	})
 }
 
-func Backup(svc *connect.Connect, instanceId string, theWriter Writer) {
+func (cb ConnectBackup) Backup(svc *connect.Connect, theWriter Writer) {
 
-	backupFlows(svc, instanceId, theWriter)
-	backupUsers(svc, instanceId, theWriter)
-	backupRoutingProfile(svc, instanceId, theWriter)
-	backupUserHierarchyGroups(svc, instanceId, theWriter)
-
+	cb.backupFlows(svc, theWriter)
+	cb.backupUsers(svc, theWriter)
+	cb.backupRoutingProfile(svc, theWriter)
+	cb.backupUserHierarchyGroups(svc, theWriter)
+	cb.backupUserHierarchyStructure(svc, theWriter)
 }

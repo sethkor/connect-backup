@@ -44,7 +44,7 @@ Let me know if you would like a particular os/arch binary regularly built.
 - [X] Routing Profiles
 - [X] User Data (except Passwords)
 - [X] User Hierarchy Groups
-- [ ] User Hierarchy 
+- [X] User Hierarchy 
 
 connect-backup use a directory/prefix (see what I did there?) structure so everything is neat and tidy.  If the structure
 is not there it will create it on the fly:
