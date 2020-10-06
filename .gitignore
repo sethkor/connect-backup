@@ -18,3 +18,6 @@
 cmd/tmp/
 connect-backup
 dist/
+packaged.yaml
+connect-backup-lambda
+connect-backup-lambda.zip
