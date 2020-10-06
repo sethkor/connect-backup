@@ -55,7 +55,7 @@ func getElement(result interface{}) (string, string, error) {
 		objectPrefix = routingProfiles + "/" + *result.(connect.RoutingProfile).Name + jsonExtn
 		element = result.(connect.RoutingProfile).String()
 	case connect.User:
-		objectPrefix = user + "/" + *result.(connect.User).Username
+		objectPrefix = user + "/" + *result.(connect.User).Username + jsonExtn
 		element = result.(connect.User).String()
 	case connect.HierarchyGroup:
 		objectPrefix = userHierarchyGroup + "/" + *result.(connect.HierarchyGroup).Name + jsonExtn
