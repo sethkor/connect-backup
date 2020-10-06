@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  A Lambda that will trigger backup of AWS Connect data to S3.
+Globals:
+  Function:
+    Timeout: 300
+
+Parameters:
+  bucketName:
+    Type: String
+  connectInstanceId:
+    Type: String
+
+Resources:
+  s3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Ref bucketName
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: TRUE
+        BlockPublicPolicy: TRUE
+        IgnorePublicAcls: TRUE
+        RestrictPublicBuckets: TRUE
+      VersioningConfiguration:
+        Status: Enabled
+  periodicTrigger:
+    Type: AWS::Events::Rule
+    Properties:
+        Description: "A Periodic trigger for backing up AWS Connect via Lambda"
+        Name: Aws-Connect-Backup
+        ScheduleExpression: "rate(1 hour)"  #Change this to your desired frequency eg (5 minutes)
+        State: ENABLED
+        Targets:
+          - Arn: !GetAtt ConnectBackupLambda.Arn
+            Id: "AWS_Connect__Backup_Lambda"
+  permissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ConnectBackupLambda
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt periodicTrigger.Arn
+
+  ConnectBackupLambda:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: ../connect-backup-lambda.zip
+      Handler: connect-backup-lambda
+      Runtime: go1.x
+      Tracing: Active # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
+      FunctionName: ConnectBackup
+      Description: A Lambda that will trigger backup of AWS Connect data to S3.
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          CONNECT_INSTANCE_ID: !Ref connectInstanceId #The AWS Connect Instance ID
+          S3_DEST_URL: !Sub "s3://${s3Bucket}" #The S3 destination for the backup as a URL e.g. s3://your-backup-bucket/prefix
+      Policies:
+        - AWSLambdaExecute # Managed Policy
+        - Version: '2012-10-17' # Policy Document
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:PutObjectACL
+              Resource: !GetAtt s3Bucket.Arn
+            - Effect: Allow
+              Action:
+                - connect:ListContactFlow
+                - connect:ListRoutingProfiles
+                - connect:ListUserHierarchyGroups
+                - connect:ListUsers
+                - connect:DescribeUserHierarchyStructure
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}"
+            - Effect: Allow
+              Action:
+                - connect:DescribeContactFlow
+                - connect:ListContactFlows
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/contact-flow/*"
+            - Effect: Allow
+              Action:
+                - connect:DescribeUser
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/agent/*"
+            - Effect: Allow
+              Action:
+                - connect:DescribeRoutingProfile
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/routing-profile/*"
+            - Effect: Allow
+              Action:
+                - connect:DescribeUserHierarchyGroup
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/agent-group/*"
+
+# If you are using S3 endpoints and need your lambda to use a local IP use the commented items below.  Just replace the
+# Security group and subnet ids with your own.
+#            - Effect: Allow
+#              Action:
+#                - ec2:DescribeNetworkInterfaces
+#                - ec2:CreateNetworkInterface
+#                - ec2:DeleteNetworkInterface
+#              Resource: '*'
+#
+#      VpcConfig:
+#        SecurityGroupIds:
+#          - sg-blahblahblah
+#        SubnetIds:
+#          - subnet-1
+#          - subnet-2
+#          - subnet-3
+
+
+Outputs:
+
+  LexLambda:
+    Description: "ConnectBackup Lambda ARN"
+    Value: !GetAtt ConnectBackupLambda.Arn
+  S3BucketName:
+    Description: "S3 Bucket where Connect backups shall be written to"
+    Value: !Ref s3Bucket

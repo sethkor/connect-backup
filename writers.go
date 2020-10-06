@@ -15,8 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-const flowsPrefix = "flows"
-
 type Writer interface {
 	write(result interface{}) error
 }

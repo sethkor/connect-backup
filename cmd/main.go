@@ -3,8 +3,6 @@ package main
 import (
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/sethkor/connect-backup"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -27,35 +25,6 @@ var (
 	date    = "unknown"
 )
 
-func getAwsSession() *session.Session {
-	var sess *session.Session
-	if *pProfile != "" {
-
-		sess = session.Must(session.NewSessionWithOptions(session.Options{
-			Profile:           *pProfile,
-			SharedConfigState: session.SharedConfigEnable,
-			Config: aws.Config{
-				CredentialsChainVerboseErrors: aws.Bool(true),
-				MaxRetries:                    aws.Int(30),
-			},
-		}))
-
-	} else {
-		sess = session.Must(session.NewSessionWithOptions(session.Options{
-			SharedConfigState: session.SharedConfigEnable,
-			Config: aws.Config{
-				CredentialsChainVerboseErrors: aws.Bool(true),
-				MaxRetries:                    aws.Int(30),
-			},
-		}))
-	} //else
-
-	if *pRegion != "" {
-		sess.Config.Region = aws.String(*pRegion)
-	}
-	return sess
-}
-
 func main() {
 
 	app.Version(version + " " + date + " " + commit)
@@ -64,7 +33,7 @@ func main() {
 
 	command := kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	sess := getAwsSession()
+	sess := connect_backup.GetAwsSession(*pProfile, *pRegion)
 	svc := connect.New(sess)
 
 	switch command {
