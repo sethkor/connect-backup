@@ -52,7 +52,7 @@ make sam-deploy
 
 If you want to undeploy you can run:
 ```
-make sam remove
+make sam-remove
 ```
 but remember to make sure your bucket is empty first (including all object versions)
 
