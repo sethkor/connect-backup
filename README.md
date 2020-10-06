@@ -57,7 +57,7 @@ make sam-remove
 but remember to make sure your bucket is empty first (including all object versions)
 
 # What is included in the backup
-- [X] Published Call Flows
+- [X] Published Call Flows (The AWS API restricts this to published flows only)
 - [X] Routing Profiles
 - [X] User Data (except Passwords)
 - [X] User Hierarchy Groups
