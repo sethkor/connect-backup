@@ -1,5 +1,5 @@
 # connect-backup
-A tool to backup and (eventually) restore AWS Connect.  You can backup to file, S3 or just to stout.
+A tool to backup and (eventually) restore AWS Connect.  You can backup to file, S3 or just to stdout.
 
 ```
 A tool to backup and restore your AWS Connect instance
@@ -39,6 +39,22 @@ For other platforms take a look at the releases in Github.  I build binaries for
 
 Let me know if you would like a particular os/arch binary regularly built.
 
+## Lambda
+If you'd rather set up a lambda to periodically trigger a backup, clone the repo as it contains all the lambda bits and
+a template to use with [AWS SAM](https://aws.amazon.com/serverless/sam/) to deploy it.  You will need to update the env.mk 
+file with the values fo your environment.
+
+Then just simply:
+```
+make lambda
+make sam-deploy
+```
+
+If you want to undeploy you can run:
+```
+make sam remove
+```
+
 # What is included in the backup
 - [X] Published Call Flows
 - [X] Routing Profiles
@@ -57,9 +73,9 @@ your-connect-backup-workspace
 
 ````
 # What about Queues?
-Currently there is no API call to describe or create queues.  When the API becomes available, Ill add it.
+Currently, there is no API call to describe or create queues.  When the API becomes available, I'll add it.
 
 # To Do
 - [ ] Restoration
-- [ ] Lambda deployment via AWS SAM 
+- [X] Lambda deployment via AWS SAM 
 
