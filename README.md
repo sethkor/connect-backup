@@ -54,6 +54,7 @@ If you want to undeploy you can run:
 ```
 make sam remove
 ```
+but remember to make sure your bucket is empty first (including all object versions)
 
 # What is included in the backup
 - [X] Published Call Flows
