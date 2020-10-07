@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
+
 	"github.com/aws/aws-sdk-go/service/connect"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -43,30 +45,25 @@ const (
 	jsonExtn               = ".json"
 )
 
-func getElement(result interface{}) (string, string, error) {
+func buildPrefix(result interface{}) (string, error) {
 
-	var objectPrefix, element string
+	var objectPrefix string
 
 	switch result.(type) {
 	case connect.ContactFlow:
 		objectPrefix = flows + "/" + *result.(connect.ContactFlow).Name + jsonExtn
-		element = result.(connect.ContactFlow).String()
 	case connect.RoutingProfile:
 		objectPrefix = routingProfiles + "/" + *result.(connect.RoutingProfile).Name + jsonExtn
-		element = result.(connect.RoutingProfile).String()
 	case connect.User:
 		objectPrefix = user + "/" + *result.(connect.User).Username + jsonExtn
-		element = result.(connect.User).String()
 	case connect.HierarchyGroup:
 		objectPrefix = userHierarchyGroup + "/" + *result.(connect.HierarchyGroup).Name + jsonExtn
-		element = result.(connect.HierarchyGroup).String()
 	case connect.HierarchyStructure:
 		objectPrefix = common + "/" + userHierarchyStructure + jsonExtn
-		element = result.(connect.HierarchyStructure).String()
 	default:
-		return "", "", errors.New("unexpected type passed to writer")
+		return "", errors.New("unexpected type passed to writer")
 	}
-	return objectPrefix, element, nil
+	return objectPrefix, nil
 }
 
 func (fw *FileWriter) InitDirs() {
@@ -81,13 +78,19 @@ func (fw *FileWriter) InitDirs() {
 func (fw *FileWriter) write(result interface{}) error {
 	//for each contact flow, write to a file with the name contact flow.
 
-	filePrefix, element, err := getElement(result)
+	filePrefix, err := buildPrefix(result)
 
 	if err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(fw.Path+string(os.PathSeparator)+filePrefix, []byte(element), 0644)
+	json, err := jsonutil.BuildJSON(result)
+
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(fw.Path+string(os.PathSeparator)+filePrefix, json, 0644)
 }
 
 func (s3w *S3Writer) write(result interface{}) error {
@@ -97,7 +100,13 @@ func (s3w *S3Writer) write(result interface{}) error {
 
 	svc := s3.New(s3w.Sess)
 
-	objectPrefix, element, err := getElement(result)
+	objectPrefix, err := buildPrefix(result)
+
+	if err != nil {
+		return err
+	}
+
+	json, err := jsonutil.BuildJSON(result)
 
 	if err != nil {
 		return err
@@ -106,7 +115,7 @@ func (s3w *S3Writer) write(result interface{}) error {
 	_, err = svc.PutObject(&s3.PutObjectInput{
 		ACL:    aws.String(s3.ObjectCannedACLBucketOwnerFullControl),
 		Bucket: aws.String(s3w.Destination.Host),
-		Body:   bytes.NewReader([]byte(element)),
+		Body:   bytes.NewReader(json),
 		Key:    aws.String(s3w.Destination.Path + "/" + objectPrefix),
 	})
 
@@ -115,11 +124,11 @@ func (s3w *S3Writer) write(result interface{}) error {
 
 func (*StdoutWriter) write(result interface{}) error {
 
-	_, element, err := getElement(result)
+	json, err := jsonutil.BuildJSON(result)
 
 	if err != nil {
 		return err
 	}
-	fmt.Println(element)
+	fmt.Println(string(json))
 	return nil
 }

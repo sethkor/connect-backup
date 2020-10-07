@@ -29,6 +29,7 @@ func (cb ConnectBackup) backupFlows() error {
 				log.Println("Failed to describe flow " + (*v).String())
 				return true
 			}
+
 			err = cb.TheWriter.write(*result.ContactFlow)
 
 			if err != nil {
