@@ -34,7 +34,6 @@ func main() {
 	command := kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	sess := connect_backup.GetAwsSession(*pProfile, *pRegion)
-	svc := connect.New(sess)
 
 	switch command {
 	case pBackupCommand.FullCommand():
@@ -45,8 +44,11 @@ func main() {
 		} else if *pS3 != nil {
 			theWriter = &connect_backup.S3Writer{Destination: *(*pS3), Sess: sess}
 		}
-		cb := connect_backup.ConnectBackup{ConnectInstanceId: pInstance}
-		cb.Backup(svc, theWriter)
+		cb := connect_backup.ConnectBackup{ConnectInstanceId: pInstance,
+			TheWriter: theWriter,
+			Svc:       connect.New(sess),
+		}
+		cb.Backup()
 	}
 
 }

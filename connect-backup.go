@@ -8,17 +8,19 @@ import (
 
 type ConnectBackup struct {
 	ConnectInstanceId *string
+	Svc               *connect.Connect
+	TheWriter         Writer
 }
 
-func (cb ConnectBackup) backupFlows(svc *connect.Connect, theWriter Writer) error {
+func (cb ConnectBackup) backupFlows() error {
 	log.Println("Backing up flows")
 	connectInstanceId := cb.ConnectInstanceId
-	err := svc.ListContactFlowsPages(&connect.ListContactFlowsInput{
+	err := cb.Svc.ListContactFlowsPages(&connect.ListContactFlowsInput{
 		InstanceId: connectInstanceId,
 	}, func(output *connect.ListContactFlowsOutput, b bool) bool {
 		for _, v := range output.ContactFlowSummaryList {
 
-			result, err := svc.DescribeContactFlow(&connect.DescribeContactFlowInput{
+			result, err := cb.Svc.DescribeContactFlow(&connect.DescribeContactFlowInput{
 				InstanceId:    connectInstanceId,
 				ContactFlowId: v.Id,
 			})
@@ -27,7 +29,7 @@ func (cb ConnectBackup) backupFlows(svc *connect.Connect, theWriter Writer) erro
 				log.Println("Failed to describe flow " + (*v).String())
 				return true
 			}
-			err = theWriter.write(*result.ContactFlow)
+			err = cb.TheWriter.write(*result.ContactFlow)
 
 			if err != nil {
 				log.Fatal("Failed to write to the destination")
@@ -40,15 +42,15 @@ func (cb ConnectBackup) backupFlows(svc *connect.Connect, theWriter Writer) erro
 	return err
 }
 
-func (cb ConnectBackup) backupUsers(svc *connect.Connect, theWriter Writer) error {
+func (cb ConnectBackup) backupUsers() error {
 	log.Println("Backing up users")
 	connectInstanceId := cb.ConnectInstanceId
-	err := svc.ListUsersPages(&connect.ListUsersInput{
+	err := cb.Svc.ListUsersPages(&connect.ListUsersInput{
 		InstanceId: connectInstanceId,
 	}, func(output *connect.ListUsersOutput, b bool) bool {
 		for _, v := range output.UserSummaryList {
 
-			result, err := svc.DescribeUser(&connect.DescribeUserInput{
+			result, err := cb.Svc.DescribeUser(&connect.DescribeUserInput{
 				InstanceId: connectInstanceId,
 				UserId:     v.Id,
 			})
@@ -57,7 +59,7 @@ func (cb ConnectBackup) backupUsers(svc *connect.Connect, theWriter Writer) erro
 				log.Println("Failed to describe user " + (*v).String())
 				return true
 			}
-			err = theWriter.write(*result.User)
+			err = cb.TheWriter.write(*result.User)
 
 			if err != nil {
 				log.Fatal("Failed to write to the destination")
@@ -70,16 +72,16 @@ func (cb ConnectBackup) backupUsers(svc *connect.Connect, theWriter Writer) erro
 	return err
 }
 
-func (cb ConnectBackup) backupUserHierarchyGroups(svc *connect.Connect, theWriter Writer) error {
+func (cb ConnectBackup) backupUserHierarchyGroups() error {
 	log.Println("Backing up user hierarchy groups")
 	connectInstanceId := cb.ConnectInstanceId
-	err := svc.ListUserHierarchyGroupsPages(&connect.ListUserHierarchyGroupsInput{
+	err := cb.Svc.ListUserHierarchyGroupsPages(&connect.ListUserHierarchyGroupsInput{
 		InstanceId: connectInstanceId,
 	}, func(output *connect.ListUserHierarchyGroupsOutput, b bool) bool {
 
 		for _, v := range output.UserHierarchyGroupSummaryList {
 
-			result, err := svc.DescribeUserHierarchyGroup(&connect.DescribeUserHierarchyGroupInput{
+			result, err := cb.Svc.DescribeUserHierarchyGroup(&connect.DescribeUserHierarchyGroupInput{
 				InstanceId:       connectInstanceId,
 				HierarchyGroupId: v.Id,
 			})
@@ -88,7 +90,7 @@ func (cb ConnectBackup) backupUserHierarchyGroups(svc *connect.Connect, theWrite
 				log.Println("Failed to describe user hierarchy group " + (*v).String())
 				return true
 			}
-			err = theWriter.write(*result.HierarchyGroup)
+			err = cb.TheWriter.write(*result.HierarchyGroup)
 
 			if err != nil {
 				log.Fatal("Failed to write to the destination")
@@ -100,11 +102,11 @@ func (cb ConnectBackup) backupUserHierarchyGroups(svc *connect.Connect, theWrite
 	return err
 }
 
-func (cb ConnectBackup) backupUserHierarchyStructure(svc *connect.Connect, theWriter Writer) error {
+func (cb ConnectBackup) backupUserHierarchyStructure() error {
 	log.Println("Backing up hierarchy structures")
 	connectInstanceId := cb.ConnectInstanceId
 
-	result, err := svc.DescribeUserHierarchyStructure(&connect.DescribeUserHierarchyStructureInput{
+	result, err := cb.Svc.DescribeUserHierarchyStructure(&connect.DescribeUserHierarchyStructureInput{
 		InstanceId: connectInstanceId,
 	})
 
@@ -112,25 +114,25 @@ func (cb ConnectBackup) backupUserHierarchyStructure(svc *connect.Connect, theWr
 		log.Println("Failed to describe user hierarchy structure")
 		return err
 	}
-	return theWriter.write(*result.HierarchyStructure)
+	return cb.TheWriter.write(*result.HierarchyStructure)
 
 }
 
-func (cb ConnectBackup) backupRoutingProfile(svc *connect.Connect, theWriter Writer) error {
+func (cb ConnectBackup) backupRoutingProfile() error {
 	log.Println("Backing up Routing Profiles")
 	connectInstanceId := cb.ConnectInstanceId
-	err := svc.ListRoutingProfilesPages(&connect.ListRoutingProfilesInput{
+	err := cb.Svc.ListRoutingProfilesPages(&connect.ListRoutingProfilesInput{
 		InstanceId: connectInstanceId,
 	}, func(output *connect.ListRoutingProfilesOutput, b bool) bool {
 
 		for _, v := range output.RoutingProfileSummaryList {
 
-			result, _ := svc.DescribeRoutingProfile(&connect.DescribeRoutingProfileInput{
+			result, _ := cb.Svc.DescribeRoutingProfile(&connect.DescribeRoutingProfileInput{
 				InstanceId:       connectInstanceId,
 				RoutingProfileId: v.Id,
 			})
 
-			err := theWriter.write(*result.RoutingProfile)
+			err := cb.TheWriter.write(*result.RoutingProfile)
 
 			if err != nil {
 				log.Fatal("Failed to write to the destination")
@@ -143,24 +145,24 @@ func (cb ConnectBackup) backupRoutingProfile(svc *connect.Connect, theWriter Wri
 	return err
 }
 
-func (cb ConnectBackup) Backup(svc *connect.Connect, theWriter Writer) error {
+func (cb ConnectBackup) Backup() error {
 
-	err := cb.backupFlows(svc, theWriter)
+	err := cb.backupFlows()
 	if err != nil {
 		return err
 	}
-	err = cb.backupUsers(svc, theWriter)
+	err = cb.backupUsers()
 	if err != nil {
 		return err
 	}
-	err = cb.backupRoutingProfile(svc, theWriter)
+	err = cb.backupRoutingProfile()
 	if err != nil {
 		return err
 	}
-	err = cb.backupUserHierarchyGroups(svc, theWriter)
+	err = cb.backupUserHierarchyGroups()
 	if err != nil {
 		return err
 	}
-	return cb.backupUserHierarchyStructure(svc, theWriter)
+	return cb.backupUserHierarchyStructure()
 
 }
