@@ -21,3 +21,4 @@ dist/
 packaged.yaml
 connect-backup-lambda
 connect-backup-lambda.zip
+lambda/template.yaml
