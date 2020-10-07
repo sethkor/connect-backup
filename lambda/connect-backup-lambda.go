@@ -30,8 +30,11 @@ func HandleRequest(ctx context.Context, connectEvent events.ConnectEvent) (Respo
 		return Response{Answer: "The S3 URL passed in the environment variable S3-DEST-URL was malformed"}, err
 	}
 
-	cb := connect_backup.ConnectBackup{ConnectInstanceId: &instanceId}
-	err = cb.Backup(svc, &connect_backup.S3Writer{Destination: *s3destination, Sess: sess})
+	cb := connect_backup.ConnectBackup{ConnectInstanceId: &instanceId,
+		Svc:       svc,
+		TheWriter: &connect_backup.S3Writer{Destination: *s3destination, Sess: sess},
+	}
+	err = cb.Backup()
 
 	if err != nil {
 		log.Println("There was an error performing the backup")
