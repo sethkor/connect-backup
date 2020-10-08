@@ -21,7 +21,7 @@ var (
 
 	pRestoreCommand = app.Command("restore", "Restore a connect component")
 	pFlow           = pRestoreCommand.Flag("flow", "Restore a contact flow").Default("true").Bool()
-	pNew            = pRestoreCommand.Flag("new", "Restore contact flow as a new flow with new name instead of overwriting").String()
+	pCreate         = pRestoreCommand.Flag("create", "Restore contact flow as a new created flow with new name instead of overwriting").String()
 	pSource         = pRestoreCommand.Arg("json", "Location of restoration json (s3 URL or file)").Required().String()
 )
 
@@ -63,7 +63,7 @@ func main() {
 			Session:           *sess,
 			Source:            *pSource,
 			Element:           connect_backup.Flow,
-			NewFlowName:       *pNew,
+			NewFlowName:       *pCreate,
 		}
 		err = cr.Restore()
 	default:
