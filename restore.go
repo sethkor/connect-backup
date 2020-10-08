@@ -6,6 +6,9 @@ import (
 	"io"
 	"io/ioutil"
 	"net/url"
+	"time"
+
+	"github.com/aws/aws-sdk-go/aws/awsutil"
 
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 
@@ -27,6 +30,7 @@ type ConnectRestore struct {
 	Session           session.Session
 	Source            string
 	Element           connectElement
+	NewFlowName       string
 }
 
 func (cr ConnectRestore) Restore() error {
@@ -75,11 +79,27 @@ func (cr ConnectRestore) restoreFlow() error {
 
 	connectSvc := connect.New(&cr.Session)
 
-	_, err = connectSvc.UpdateContactFlowContent(&connect.UpdateContactFlowContentInput{
-		ContactFlowId: theFlow.Id,
-		Content:       theFlow.Content,
-		InstanceId:    cr.ConnectInstanceId,
-	})
+	//if we have a new flow name then we are creating a new flow with the backup, rather than restoring over the top of
+	//the old flow.
+	if cr.NewFlowName != "" {
+		var newFlow connect.CreateContactFlowInput
+		awsutil.Copy(&newFlow, &theFlow)
+		newFlow.Name = aws.String(cr.NewFlowName)
+		newFlow.InstanceId = cr.ConnectInstanceId
+
+		newFlow.Tags["restored-by"] = aws.String("https://github.com/sethkor/connect-backup")
+		newFlow.Tags["restored-date"] = aws.String(time.Now().UTC().String())
+
+		_, err = connectSvc.CreateContactFlow(&newFlow)
+
+	} else {
+
+		_, err = connectSvc.UpdateContactFlowContent(&connect.UpdateContactFlowContentInput{
+			ContactFlowId: theFlow.Id,
+			Content:       theFlow.Content,
+			InstanceId:    cr.ConnectInstanceId,
+		})
+	}
 
 	if err != nil {
 		return err

@@ -86,11 +86,18 @@ Currently, there is no API call to describe or create queues.  When the API beco
 You can restore AWS Connect elements you have previously backed up:
 
 - [X] Published Call Flows (The AWS API restricts this to published flows only)
-- [ ] Restore Call Flow with a new name, it will not overwrite the current published flow which is handy to minimise production impacts
+- [X] Restore Call Flow with a new name, it will not overwrite the current published flow which is handy to minimise production impacts
 - [ ] Routing Profiles
 - [ ] User Data (except Passwords)
 - [ ] User Hierarchy Groups
 - [ ] User Hierarchy 
+
+If you choose to restore with a new call flow name via `--new` you can only do this once for the new name.  If you wish
+to overwrite this new flow with another restore then omit `--new` like a normal overwrite restoration.
+Also, when using `--new` there is a [bug](https://github.com/aws/aws-sdk-go/issues/3584) in the AWS API that insist in at least 1 tag is provided.  Tags are not
+supported in the AWS Connect console and are optional in the CLI.  To get around this any restoration to a new flow will
+add two tags identifying the restoration date and the url of this tools github repo.  You will only ever see these tags
+in a backup or via the AWS Connect CLI.
 
 ## FAQ
 #### Can I take a backup json and restore it manually via the AWS Connect Console?
@@ -98,6 +105,9 @@ No.  The export/import function on the console supports a completley different f
 
 #### How about restoring a call flow export taken manually from the AWS Connect Console?
 No.  Like the question above, the formats are very different.
+
+#### Can I back-up and restore saved flows?
+No.  Only published flows can be operated on.  This is a limitation of the AWS API.
 
 #### I've found a bug, what do I fo?
 Report it and I'll take a look.
