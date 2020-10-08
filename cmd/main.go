@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 
 	"github.com/aws/aws-sdk-go/service/connect"
@@ -17,6 +18,10 @@ var (
 	pBackupCommand = app.Command("backup", "backup your instance")
 	pFile          = pBackupCommand.Flag("file", "write output to file with the provided path").ExistingDir()
 	pS3            = pBackupCommand.Flag("s3", "write file to S3 destination with path as a url").URL()
+
+	pRestoreCommand = app.Command("restore", "Restore a connect component")
+	pFlow           = pRestoreCommand.Flag("flow", "Restore a contact flow").Default("true").Bool()
+	pSource         = pRestoreCommand.Arg("json", "Location of restoration json (s3 URL or file)").Required().String()
 )
 
 var (
@@ -32,7 +37,7 @@ func main() {
 	app.VersionFlag.Short('v')
 
 	command := kingpin.MustParse(app.Parse(os.Args[1:]))
-
+	var err error
 	sess := connect_backup.GetAwsSession(*pProfile, *pRegion)
 
 	switch command {
@@ -44,11 +49,27 @@ func main() {
 		} else if *pS3 != nil {
 			theWriter = &connect_backup.S3Writer{Destination: *(*pS3), Sess: sess}
 		}
-		cb := connect_backup.ConnectBackup{ConnectInstanceId: pInstance,
-			TheWriter: theWriter,
-			Svc:       connect.New(sess),
+		cb := connect_backup.ConnectBackup{
+			ConnectInstanceId: pInstance,
+			TheWriter:         theWriter,
+			Svc:               connect.New(sess),
 		}
-		cb.Backup()
+		err = cb.Backup()
+
+	case pRestoreCommand.FullCommand():
+		cr := connect_backup.ConnectRestore{
+			ConnectInstanceId: pInstance,
+			Session:           *sess,
+			Source:            *pSource,
+			Element:           connect_backup.Flow,
+		}
+		err = cr.Restore()
+	default:
+		app.FatalUsage("")
+	}
+
+	if err != nil {
+		log.Fatal(err)
 	}
 
 }

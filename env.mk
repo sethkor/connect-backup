@@ -17,8 +17,8 @@ LAMBDA-NAME=ConnectBackup
 REGION=ap-southeast-2
 #This is your existing AWS sam deployment bucket.  It is not created as part of this project and I have assumed it
 #already exists for you.  For more info, see the AWS SAM documentation
-SAM-BUCKET=versent-sethkor-sam
+SAM-BUCKET=sethkor-sam
 #This is the bucket that will be created for your backups
-BACKUP-BUCKET=sethkor-versent-connect-backup-test
+BACKUP-BUCKET=sethkor-connect-backup-test
 #This is your AWS Connect instance id.  You can get this from the console
 CONNECT-INSTANCE-ID=946d3719-32f0-4ccc-a3de-713f52f6db7f
