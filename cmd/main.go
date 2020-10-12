@@ -20,9 +20,20 @@ var (
 	pS3            = pBackupCommand.Flag("s3", "write file to S3 destination with path as a url").URL()
 
 	pRestoreCommand = app.Command("restore", "Restore a connect component")
-	pFlow           = pRestoreCommand.Flag("flow", "Restore a contact flow").Default("true").Bool()
-	pCreate         = pRestoreCommand.Flag("create", "Restore contact flow as a new created flow with new name instead of overwriting").String()
-	pSource         = pRestoreCommand.Arg("json", "Location of restoration json (s3 URL or file)").Required().String()
+	pType           = pRestoreCommand.Flag("type", "type to restore.  must be one of flow,routing-profile,user,user-hierarchy-group,user-hierarchy-structure").Required().Enum(
+		string(connect_backup.Flow),
+		string(connect_backup.RoutingProfile),
+		string(connect_backup.User),
+		string(connect_backup.UserHierarchyGroup),
+		string(connect_backup.UserHierarchyStructure))
+	//pFlow = pRestoreCommand.Command("flow", "Restore a flow") //pRestoreCommand.Flag("flow", "Restore a contact flow").Default("false").Bool()
+	//pUser                   = pRestoreCommand.Flag("user", "Restore a user").Default("false").Bool()
+	//pUserHierarchyGroup     = pRestoreCommand.Flag("user-hierarchy-group", "Restore a user hierarchy group").Default("false").Bool()
+	//pUserHierarchyStructure = pRestoreCommand.Flag("user-hierarchy-structure", "Restore the user hierarchy structure").Default("false").Bool()
+	//pRoutingProfile         = pRestoreCommand.Flag("routing-profile", "Restore a routing profile").Default("false").Bool()
+
+	pCreate = pRestoreCommand.Flag("create", "Restore contact flow as a new created flow with new name instead of overwriting").String()
+	pSource = pRestoreCommand.Arg("json", "Location of restoration json (s3 URL or file)").Required().String()
 )
 
 var (
@@ -58,12 +69,13 @@ func main() {
 		err = cb.Backup()
 
 	case pRestoreCommand.FullCommand():
+
 		cr := connect_backup.ConnectRestore{
 			ConnectInstanceId: pInstance,
 			Session:           *sess,
 			Source:            *pSource,
-			Element:           connect_backup.Flow,
-			NewFlowName:       *pCreate,
+			Element:           connect_backup.ConnectElement(*pType),
+			NewName:           *pCreate,
 		}
 		err = cr.Restore()
 	default:

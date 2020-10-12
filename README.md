@@ -86,11 +86,12 @@ Currently, there is no API call to describe or create queues.  When the API beco
 You can restore AWS Connect elements you have previously backed up:
 
 - [X] Published Call Flows (The AWS API restricts this to published flows only)
-- [X] Restore Call Flow with a new name by creating it, it will not overwrite the current published flow which is handy to minimise production impacts
-- [ ] Routing Profiles
-- [ ] User Data (except Passwords)
+- [X] Routing Profiles
+- [X] User Data (except Passwords)
 - [ ] User Hierarchy Groups
 - [ ] User Hierarchy 
+
+The `--create` flg will allow you to create a new element, rather than overwriting the existing one.
 
 If you choose to restore with a new call flow name via `--create` you can only do this once for the new name.  If you wish
 to overwrite this new flow with another restore then omit `--create` like a normal overwrite restoration.
@@ -98,6 +99,16 @@ Also, when using `--create` there is a [bug](https://github.com/aws/aws-sdk-go/i
 supported in the AWS Connect console and are optional in the CLI.  To get around this any restoration to a new flow will
 add two tags identifying the restoration date and the url of this tools github repo.  You will only ever see these tags
 in a backup or via the AWS Connect CLI.
+
+When restoring Users, in order for the restoration to be reflected in the AWS Connect Console, you must refresh the 
+User Management screen.  This is due to the console using the listing on this screen as a cache to the underlying data.
+
+You can use the restore function for a user to update the users first/last name by editing the json backup file.  You can't
+do this via the AWS Connect Console at all.
+
+If you use the `--create` flag when restoring a user a new user will be created with the user id passed with the `--create``
+flag.  The password will be set to a very random long string (64chats, Caps and Upper case, Symbols and Numbers included)
+Which won't be returned.  You will have to instruct the user to go through the password reset process to reset it.
 
 ## FAQ
 #### Can I take a backup json and restore it manually via the AWS Connect Console?
