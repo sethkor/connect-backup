@@ -115,6 +115,26 @@ func (cr ConnectRestore) restoreUser() error {
 			PhoneConfig: theUser.PhoneConfig,
 		})
 
+		if err != nil {
+			return err
+		}
+
+		_, err = connectSvc.UpdateUserRoutingProfile(&connect.UpdateUserRoutingProfileInput{
+			InstanceId:       cr.ConnectInstanceId,
+			UserId:           theUser.Id,
+			RoutingProfileId: theUser.RoutingProfileId,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		_, err = connectSvc.UpdateUserHierarchy(&connect.UpdateUserHierarchyInput{
+			InstanceId:       cr.ConnectInstanceId,
+			UserId:           theUser.Id,
+			HierarchyGroupId: theUser.HierarchyGroupId,
+		})
+
 	}
 	return err
 }
