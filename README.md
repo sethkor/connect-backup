@@ -106,9 +106,10 @@ User Management screen.  This is due to the console using the listing on this sc
 You can use the restore function for a user to update the users first/last name by editing the json backup file.  You can't
 do this via the AWS Connect Console at all.
 
-If you use the `--create` flag when restoring a user a new user will be created with the user id passed with the `--create``
+If you use the `--create` flag when restoring a user a new user will be created with the user id passed with the `--create`
 flag.  The password will be set to a very random long string (64chats, Caps and Upper case, Symbols and Numbers included)
-Which won't be returned.  You will have to instruct the user to go through the password reset process to reset it.
+Which won't be returned.  You will have to instruct the user to go through the password reset process to reset it.  If the
+user already exists the user will not be recreated or updated.
 
 ## FAQ
 #### Can I take a backup json and restore it manually via the AWS Connect Console?
