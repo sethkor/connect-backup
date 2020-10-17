@@ -18,10 +18,13 @@ Commands:
     Show help.
 
   backup [<flags>]
-    backup your instance
+    Backup your instance
 
-  restore [<flags>] <json>
+  restore --type=TYPE [<flags>] <json>
     Restore a connect component
+
+  rename-flows [<flags>]
+    Rename all call flows with a suffix
 ```
 
 ## Getting connect-backup
