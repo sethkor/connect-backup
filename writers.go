@@ -35,12 +35,6 @@ type StdoutWriter struct {
 }
 
 const (
-	//flows                  = "flows"
-	//routingProfiles        = "routing-profiles"
-	//routingProfilesQueues  = "routing-profile-queues"
-	//user                   = "users"
-	//userHierarchyGroup     = "user-hierarchy-groups"
-	//userHierarchyStructure = "user-hierarchy-structures"
 	common        = "common"
 	unknown       = "unknown"
 	pathSeparator = string(os.PathSeparator)
