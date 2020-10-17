@@ -195,7 +195,7 @@ func (cb ConnectBackup) Backup() error {
 
 }
 
-func (cb ConnectBackup) RenameFlows(prefix string) error {
+func (cb ConnectBackup) RenameFlows(prefix string, allFlows bool) error {
 
 	//List all flows
 	err := cb.Svc.ListContactFlowsPages(&connect.ListContactFlowsInput{
@@ -203,6 +203,12 @@ func (cb ConnectBackup) RenameFlows(prefix string) error {
 	}, func(output *connect.ListContactFlowsOutput, b bool) bool {
 
 		for _, v := range output.ContactFlowSummaryList {
+			if !allFlows {
+				if !defaultFlows[*v.Name] {
+					continue
+				}
+			}
+
 			_, err := cb.Svc.UpdateContactFlowName(&connect.UpdateContactFlowNameInput{
 				InstanceId:    cb.ConnectInstanceId,
 				Name:          aws.String(prefix + *v.Name),
