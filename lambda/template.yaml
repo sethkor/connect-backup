@@ -34,11 +34,12 @@ Resources:
     Properties:
         Description: "A Periodic trigger for backing up AWS Connect via Lambda"
         Name: Aws-Connect-Backup
-        ScheduleExpression: "rate(1 hour)"  #Change this to your desired frequency eg (5 minutes)
+        ScheduleExpression: "rate(2 minutes)"  #Change this to your desired frequency eg (5 minutes)
         State: ENABLED
         Targets:
           - Arn: !GetAtt ConnectBackupLambda.Arn
             Id: "AWS_Connect__Backup_Lambda"
+            Input: !Sub '{"ConnectInstanceId" : "${connectInstanceId}", "S3DestUrl" : "s3://${s3Bucket}/${connectInstanceId}"}'
   permissionForEventsToInvokeLambda:
     Type: AWS::Lambda::Permission
     Properties:
@@ -56,7 +57,7 @@ Resources:
       Tracing: Active # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
       FunctionName: ConnectBackup
       Description: A Lambda that will trigger backup of AWS Connect data to S3.
-      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+      Environment: # You can optionally override the event sent to the lambda with env vars but it's better to send events.
         Variables:
           CONNECT_INSTANCE_ID: !Ref connectInstanceId #The AWS Connect Instance ID
           S3_DEST_URL: !Sub "s3://${s3Bucket}" #The S3 destination for the backup as a URL e.g. s3://your-backup-bucket/prefix
