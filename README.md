@@ -58,6 +58,22 @@ make lambda
 make sam-deploy
 ```
 
+You must trigger the lambda with an event json that contains the connect instance id and S3 bucket URL like this:
+```
+{
+  "ConnectInstanceId": "your-AWS-connect-instance-id",
+  "S3DestURL": "s3://your-backup-bucket/whatever-prefix-you want-like-the-instance-id"
+}
+```
+
+The sam template in `lambda/template.yaml` contains a single sample `AWS::Events::Rule` with an Input that constructs 
+this JSON.  You can add additional `AWS::Events::Rule` to back up other connect instances (or the same one to different 
+destinations).  If you are using the same backup bucket to backup multiple connect instances, try adding the connect
+instance id as a prefix in the `S3DestURL` value of the json.
+
+You can also specify the connect instance is and s3 destination URL as environment vars and leave the event blank.  This
+provides some backward compatibility to early generations of this lambda that relied soley on environment vars.
+
 If you want to undeploy you can run:
 ```
 make sam-remove
