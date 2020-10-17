@@ -194,3 +194,30 @@ func (cb ConnectBackup) Backup() error {
 	return cb.backupUserHierarchyStructure()
 
 }
+
+func (cb ConnectBackup) RenameFlows(suffix string) error {
+
+	//List all flows
+	err := cb.Svc.ListContactFlowsPages(&connect.ListContactFlowsInput{
+		InstanceId: cb.ConnectInstanceId,
+	}, func(output *connect.ListContactFlowsOutput, b bool) bool {
+
+		for _, v := range output.ContactFlowSummaryList {
+			_, err := cb.Svc.UpdateContactFlowName(&connect.UpdateContactFlowNameInput{
+				InstanceId:    cb.ConnectInstanceId,
+				Name:          aws.String(suffix + *v.Name),
+				ContactFlowId: v.Id,
+			})
+
+			if err == nil {
+				log.Println("Renamed from " + *v.Name + " to " + suffix + *v.Name)
+			} else {
+				log.Print("Failed to update name for flow " + *v.Name + ". ID: " + *v.Id)
+			}
+		}
+
+		return true
+	})
+
+	return err
+}

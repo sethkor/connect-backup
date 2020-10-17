@@ -15,12 +15,12 @@ var (
 	pRegion   = app.Flag("region", "AWS region").String()
 	pInstance = app.Flag("instance", "The AWS Connect instance id to backup").Required().String()
 
-	pBackupCommand = app.Command("backup", "backup your instance")
-	pFile          = pBackupCommand.Flag("file", "write output to file with the provided path").ExistingDir()
-	pS3            = pBackupCommand.Flag("s3", "write file to S3 destination with path as a url").URL()
+	pBackupCommand = app.Command("backup", "Backup your instance")
+	pFile          = pBackupCommand.Flag("file", "Write output to file with the provided path").ExistingDir()
+	pS3            = pBackupCommand.Flag("s3", "Write file to S3 destination with path as a url").URL()
 
 	pRestoreCommand = app.Command("restore", "Restore a connect component")
-	pType           = pRestoreCommand.Flag("type", "type to restore.  must be one of flow,routing-profile,user,user-hierarchy-group,user-hierarchy-structure").Required().Enum(
+	pType           = pRestoreCommand.Flag("type", "Type to restore.  must be one of flow,routing-profile,user,user-hierarchy-group,user-hierarchy-structure").Required().Enum(
 		string(connect_backup.Flows),
 		string(connect_backup.RoutingProfiles),
 		string(connect_backup.Users),
@@ -28,6 +28,9 @@ var (
 		string(connect_backup.UserHierarchyStructure))
 	pCreate = pRestoreCommand.Flag("create", "Restore contact flow as a new created flow with new name instead of overwriting").String()
 	pSource = pRestoreCommand.Arg("json", "Location of restoration json (s3 URL or file)").Required().String()
+
+	pRenameFlowsCommand = app.Command("rename-flows", "Rename all call flows with a suffix")
+	pSuffix             = pRenameFlowsCommand.Flag("suffix", "Suffix to use").Default("~").String()
 )
 
 var (
@@ -72,6 +75,14 @@ func main() {
 			NewName:           *pCreate,
 		}
 		err = cr.Restore()
+
+	case pRenameFlowsCommand.FullCommand():
+		cb := connect_backup.ConnectBackup{
+			ConnectInstanceId: pInstance,
+			Svc:               connect.New(sess),
+		}
+
+		err = cb.RenameFlows(*pSuffix)
 	default:
 		app.FatalUsage("")
 	}
