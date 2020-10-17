@@ -117,6 +117,12 @@ No.  Like the question above, the formats are very different.
 #### Can I back-up and restore saved flows?
 No.  Only published flows can be operated on.  This is a limitation of the AWS API.
 
+#### Why can't I restore routing profile queues?
+The AWS API appears to have a bug with the UpdateRoutingProfileQueue API currently
+
+#### Why can't I restore a user hierarchy group to be empty?
+The AWS API doesn't accept an empty or nil value for this currently
+
 #### I've found a bug, what do I fo?
 Report it and I'll take a look.
 
