@@ -166,15 +166,7 @@ func (cb ConnectBackup) backupRoutingProfileQueues(routingProfileId string) erro
 		InstanceId:       connectInstanceId,
 		RoutingProfileId: aws.String(routingProfileId),
 	}, func(output *connect.ListRoutingProfileQueuesOutput, b bool) bool {
-		//		for _, v := range output.RoutingProfileQueueConfigSummaryList {
-
 		_ = cb.TheWriter.writeList(routingProfileId, output.RoutingProfileQueueConfigSummaryList)
-
-		//	if err != nil {
-		//		log.Fatal("Failed to write to the destination")
-		//	}
-		//
-		//}
 		return true
 	})
 
