@@ -29,8 +29,8 @@ var (
 	pCreate = pRestoreCommand.Flag("create", "Restore contact flow as a new created flow with new name instead of overwriting").String()
 	pSource = pRestoreCommand.Arg("json", "Location of restoration json (s3 URL or file)").Required().String()
 
-	pRenameFlowsCommand = app.Command("rename-flows", "Rename all call flows with a suffix")
-	pSuffix             = pRenameFlowsCommand.Flag("suffix", "Suffix to use").Default("~").String()
+	pRenameFlowsCommand = app.Command("rename-flows", "Rename all call flows with a prefix")
+	pPrefix             = pRenameFlowsCommand.Flag("prefix", "Prefix to use").Default("~").String()
 )
 
 var (
@@ -82,7 +82,7 @@ func main() {
 			Svc:               connect.New(sess),
 		}
 
-		err = cb.RenameFlows(*pSuffix)
+		err = cb.RenameFlows(*pPrefix)
 	default:
 		app.FatalUsage("")
 	}

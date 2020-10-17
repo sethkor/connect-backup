@@ -110,6 +110,15 @@ flag.  The password will be set to a very random long string (64chars, Caps and 
 Which won't be returned.  You will have to instruct the user to go through the password reset process to reset it.  If the
 user already exists the user will not be recreated or updated.
 
+## Renaming all the contact flows
+AWS Connect won't let you delete any contact flows. Ever.  Also every new instance you create comes with a bunch of example 
+contact flows you can never delete either.  This leads to your contact flow workspace jumbling up the contact flows you
+create and work with every day with the examples making things annoyingly hard to find.  Now you can use `--rename-flows`
+which will add a prefix to **all** call flows which can help you with sorting and put all the example flows at the bottom of
+your contact flow list.  The default prefix is `~` (you can supply a different one to use) which will mean it will sort 
+the renamed flows at the bottom.  You can run this when you first create a connect instance or any time after.  As the 
+Name is really only metadata, renaming flows won't impact any references or live call flows.
+
 ## FAQ
 #### Can I take a backup json and restore it manually via the AWS Connect Console?
 No.  The export/import function on the console supports a completley different format to the AWs API leveraged by `connect-backup`
