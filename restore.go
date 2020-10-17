@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/url"
 	"path/filepath"
 
@@ -67,13 +68,11 @@ func (cr ConnectRestore) Restore() error {
 func (cr ConnectRestore) restoreUser() error {
 	var theUser connect.User
 
-	err := cr.readSource(&theUser)
-
-	if err != nil {
-		return err
-	}
+	cr.readSource(&theUser)
 
 	connectSvc := connect.New(&cr.Session)
+
+	var err error
 
 	//if we have a new user name then we are creating a new flow with the backup, rather than restoring over the top of
 	//the old flow.
@@ -86,12 +85,17 @@ func (cr ConnectRestore) restoreUser() error {
 
 		res, err := password.Generate(64, 10, 10, false, false)
 		if err != nil {
-			return err
+			log.Fatal("Could not generate new temporary password: " + err.Error())
 		}
 		newProfile.Password = aws.String(res)
 		newProfile.Tags = nil
 
 		_, err = connectSvc.CreateUser(&newProfile)
+
+		if err != nil {
+			log.Fatal("Could not Create User: " + err.Error())
+
+		}
 
 	} else {
 		//Update the existing flow in place, this requires several operations.
@@ -104,7 +108,8 @@ func (cr ConnectRestore) restoreUser() error {
 		})
 
 		if err != nil {
-			return err
+			log.Fatal("Could not Update User Identity Info: " + err.Error())
+
 		}
 
 		_, err = connectSvc.UpdateUserSecurityProfiles(&connect.UpdateUserSecurityProfilesInput{
@@ -114,7 +119,7 @@ func (cr ConnectRestore) restoreUser() error {
 		})
 
 		if err != nil {
-			return err
+			log.Fatal("Could not Update User Security Profile: " + err.Error())
 		}
 
 		_, err = connectSvc.UpdateUserPhoneConfig(&connect.UpdateUserPhoneConfigInput{
@@ -124,7 +129,7 @@ func (cr ConnectRestore) restoreUser() error {
 		})
 
 		if err != nil {
-			return err
+			log.Fatal("Could not Update User Phone config: " + err.Error())
 		}
 
 		_, err = connectSvc.UpdateUserRoutingProfile(&connect.UpdateUserRoutingProfileInput{
@@ -134,14 +139,20 @@ func (cr ConnectRestore) restoreUser() error {
 		})
 
 		if err != nil {
-			return err
+			log.Fatal("Could not Update User Routing Profile: " + err.Error())
 		}
 
-		_, err = connectSvc.UpdateUserHierarchy(&connect.UpdateUserHierarchyInput{
-			InstanceId:       cr.ConnectInstanceId,
-			UserId:           theUser.Id,
-			HierarchyGroupId: theUser.HierarchyGroupId,
-		})
+		if theUser.HierarchyGroupId != nil {
+			_, err = connectSvc.UpdateUserHierarchy(&connect.UpdateUserHierarchyInput{
+				InstanceId:       cr.ConnectInstanceId,
+				UserId:           theUser.Id,
+				HierarchyGroupId: theUser.HierarchyGroupId,
+			})
+			if err != nil {
+				log.Fatal("Could not Update User Hierarchy: " + err.Error())
+			}
+
+		}
 
 	}
 	return err
@@ -151,14 +162,10 @@ func (cr ConnectRestore) restoreRoutingProfile() error {
 
 	var theProfile connect.RoutingProfile
 
-	err := cr.readSource(&theProfile)
-
-	if err != nil {
-		return err
-	}
+	cr.readSource(&theProfile)
 
 	connectSvc := connect.New(&cr.Session)
-
+	var err error
 	//if we have a new flow name then we are creating a new routing profile with the backup, rather than restoring over the top of
 	//the old flow.
 	if cr.NewName != "" {
@@ -171,7 +178,7 @@ func (cr ConnectRestore) restoreRoutingProfile() error {
 		result, err := connectSvc.CreateRoutingProfile(&newProfile)
 
 		if err != nil {
-			return err
+			log.Fatal("Could not Create Routing Profile: " + err.Error())
 		}
 
 		cr.NewName = *result.RoutingProfileId
@@ -180,7 +187,7 @@ func (cr ConnectRestore) restoreRoutingProfile() error {
 		//Update the existing flow in place, this requires several operations.
 
 		//First update the profile name and description
-		_, err = connectSvc.UpdateRoutingProfileName(&connect.UpdateRoutingProfileNameInput{
+		_, err := connectSvc.UpdateRoutingProfileName(&connect.UpdateRoutingProfileNameInput{
 			RoutingProfileId: theProfile.RoutingProfileId,
 			InstanceId:       cr.ConnectInstanceId,
 			Name:             theProfile.Name,
@@ -188,7 +195,7 @@ func (cr ConnectRestore) restoreRoutingProfile() error {
 		})
 
 		if err != nil {
-			return err
+			log.Fatal("Could not Update Routing Profile Name: " + err.Error())
 		}
 
 		//Then the concurrency
@@ -199,7 +206,7 @@ func (cr ConnectRestore) restoreRoutingProfile() error {
 		})
 
 		if err != nil {
-			return err
+			log.Fatal("Could not Update Routing Profile Concurrency: " + err.Error())
 		}
 
 		//Now the default outbound queue
@@ -211,7 +218,7 @@ func (cr ConnectRestore) restoreRoutingProfile() error {
 		})
 
 		if err != nil {
-			return err
+			log.Fatal("Could not Update Routing Profile Default outbound Queue: " + err.Error())
 		}
 
 		cr.NewName = *theProfile.RoutingProfileId
@@ -233,11 +240,9 @@ func (cr ConnectRestore) restoreRoutingProfileQueue(connectSvc *connect.Connect)
 
 	theProfileQueueConfig := make([]connect.RoutingProfileQueueConfigSummary, 0)
 
-	err := cr.readSource(&theProfileQueueConfig)
+	cr.readSource(&theProfileQueueConfig)
 
-	if err != nil {
-		return err
-	}
+	var err error = nil
 
 	var queueConfigs []*connect.RoutingProfileQueueConfig
 
@@ -265,7 +270,7 @@ func (cr ConnectRestore) restoreRoutingProfileQueue(connectSvc *connect.Connect)
 	return err
 }
 
-func (cr ConnectRestore) readSource(destination interface{}) error {
+func (cr ConnectRestore) readSource(destination interface{}) {
 	s3Location, _ := url.Parse(cr.Source)
 	if s3Location.Scheme == "s3" {
 		cr.location = s3Source
@@ -279,21 +284,25 @@ func (cr ConnectRestore) readSource(destination interface{}) error {
 		})
 
 		if err != nil {
-			return err
+			log.Fatal("Could not read source from S3: " + err.Error())
 		}
 		stream = result.Body
 		err = jsonutil.UnmarshalJSON(destination, stream)
-
+		if err != nil {
+			log.Fatal("Could not unmarshal json source: " + err.Error())
+		}
 	} else {
 		cr.location = fileSource
 		//Assume it's a file, try opening it
-		byte, err := ioutil.ReadFile(cr.Source)
+		fileByte, err := ioutil.ReadFile(cr.Source)
 		if err != nil {
-			return err
+			log.Fatal("Could not read source from file: " + err.Error())
 		}
-		err = json.Unmarshal(byte, destination)
+		err = json.Unmarshal(fileByte, destination)
+		if err != nil {
+			log.Fatal("Could not unmarshal json source: " + err.Error())
+		}
 	}
-	return nil
 }
 
 func (cr ConnectRestore) restoreFlow() error {
@@ -301,14 +310,10 @@ func (cr ConnectRestore) restoreFlow() error {
 	//is the location S3 or file?
 	var theFlow connect.ContactFlow
 
-	err := cr.readSource(&theFlow)
-
-	if err != nil {
-		return err
-	}
+	cr.readSource(&theFlow)
 
 	connectSvc := connect.New(&cr.Session)
-
+	var err error
 	//if we have a new flow name then we are creating a new flow with the backup, rather than restoring over the top of
 	//the old flow.
 	if cr.NewName != "" {
@@ -330,7 +335,7 @@ func (cr ConnectRestore) restoreFlow() error {
 	}
 
 	if err != nil {
-		return err
+		log.Fatal("Could not restore Contact Flow: " + err.Error())
 	}
 
 	return err
