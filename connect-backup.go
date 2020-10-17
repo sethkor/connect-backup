@@ -195,7 +195,7 @@ func (cb ConnectBackup) Backup() error {
 
 }
 
-func (cb ConnectBackup) RenameFlows(suffix string) error {
+func (cb ConnectBackup) RenameFlows(prefix string) error {
 
 	//List all flows
 	err := cb.Svc.ListContactFlowsPages(&connect.ListContactFlowsInput{
@@ -205,12 +205,12 @@ func (cb ConnectBackup) RenameFlows(suffix string) error {
 		for _, v := range output.ContactFlowSummaryList {
 			_, err := cb.Svc.UpdateContactFlowName(&connect.UpdateContactFlowNameInput{
 				InstanceId:    cb.ConnectInstanceId,
-				Name:          aws.String(suffix + *v.Name),
+				Name:          aws.String(prefix + *v.Name),
 				ContactFlowId: v.Id,
 			})
 
 			if err == nil {
-				log.Println("Renamed from " + *v.Name + " to " + suffix + *v.Name)
+				log.Println("Renamed from " + *v.Name + " to " + prefix + *v.Name)
 			} else {
 				log.Print("Failed to update name for flow " + *v.Name + ". ID: " + *v.Id)
 			}
