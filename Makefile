@@ -1,4 +1,4 @@
-include env-local.mk
+include env.mk
 .PHONY: lambda
 
 mac:
