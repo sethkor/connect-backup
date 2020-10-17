@@ -1,0 +1,14 @@
+{
+  "InstanceId": "946d3719-32f0-4ccc-a3de-713f52f6db7f",
+  "RoutingProfileId": "4b12d4e5-6edc-4daa-baff-31cf2b5b1704",
+  "QueueConfigs": [
+    {
+      "QueueReference": {
+        "QueueId": "197ed0b9-a3f3-4c66-8120-137d12cd1226",
+        "Channel": "VOICE"
+      },
+      "Priority": 1,
+      "Delay": 0
+    }
+  ]
+}

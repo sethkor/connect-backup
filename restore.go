@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/url"
-	"time"
+	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 
@@ -24,17 +24,27 @@ import (
 type ConnectElement string
 
 const (
-	Flow                   ConnectElement = "flow"
-	RoutingProfile         ConnectElement = "routing-profile"
-	User                   ConnectElement = "user"
-	UserHierarchyGroup     ConnectElement = "user-hierarchy-group"
+	Flows                  ConnectElement = "flow"
+	RoutingProfiles        ConnectElement = "routing-profile"
+	RoutingProfileQueues   ConnectElement = "routing-profile-queue"
+	Users                  ConnectElement = "user"
+	UserHierarchyGroups    ConnectElement = "user-hierarchy-group"
 	UserHierarchyStructure ConnectElement = "user-hierarchy-structure"
+)
+
+type sourceType int
+
+const (
+	fileSource sourceType = iota
+	s3Source              = iota
 )
 
 type ConnectRestore struct {
 	ConnectInstanceId *string
 	Session           session.Session
 	Source            string
+	location          sourceType
+	url               url.URL
 	Element           ConnectElement
 	NewName           string
 }
@@ -42,11 +52,11 @@ type ConnectRestore struct {
 func (cr ConnectRestore) Restore() error {
 
 	switch cr.Element {
-	case Flow:
+	case Flows:
 		return cr.restoreFlow()
-	case RoutingProfile:
+	case RoutingProfiles:
 		return cr.restoreRoutingProfile()
-	case User:
+	case Users:
 		return cr.restoreUser()
 
 	default:
@@ -79,9 +89,7 @@ func (cr ConnectRestore) restoreUser() error {
 			return err
 		}
 		newProfile.Password = aws.String(res)
-
-		newProfile.Tags["restored-by"] = aws.String("https://github.com/sethkor/connect-backup")
-		newProfile.Tags["restored-date"] = aws.String(time.Now().UTC().String())
+		newProfile.Tags = nil
 
 		_, err = connectSvc.CreateUser(&newProfile)
 
@@ -158,11 +166,15 @@ func (cr ConnectRestore) restoreRoutingProfile() error {
 		awsutil.Copy(&newProfile, &theProfile)
 		newProfile.Name = aws.String(cr.NewName)
 		newProfile.InstanceId = cr.ConnectInstanceId
+		newProfile.Tags = nil
 
-		newProfile.Tags["restored-by"] = aws.String("https://github.com/sethkor/connect-backup")
-		newProfile.Tags["restored-date"] = aws.String(time.Now().UTC().String())
+		result, err := connectSvc.CreateRoutingProfile(&newProfile)
 
-		_, err = connectSvc.CreateRoutingProfile(&newProfile)
+		if err != nil {
+			return err
+		}
+
+		cr.NewName = *result.RoutingProfileId
 
 	} else {
 		//Update the existing flow in place, this requires several operations.
@@ -198,14 +210,66 @@ func (cr ConnectRestore) restoreRoutingProfile() error {
 			DefaultOutboundQueueId: theProfile.DefaultOutboundQueueId,
 		})
 
+		if err != nil {
+			return err
+		}
+
+		cr.NewName = *theProfile.RoutingProfileId
+		if cr.location == fileSource {
+			cr.Source = filepath.Dir(filepath.Dir(cr.Source)) + pathSeparator + string(RoutingProfileQueues) + "s/" + *theProfile.RoutingProfileId + jsonExtn
+		} else {
+			newPath := filepath.Dir(filepath.Dir(cr.url.Path)) + string(RoutingProfileQueues) + "s/" + *theProfile.RoutingProfileId + jsonExtn
+			cr.Source = "s3://" + cr.url.Host + newPath
+		}
+
 	}
 
+	//err = cr.restoreRoutingProfileQueue(connectSvc)
+
+	return err
+}
+
+func (cr ConnectRestore) restoreRoutingProfileQueue(connectSvc *connect.Connect) error {
+
+	theProfileQueueConfig := make([]connect.RoutingProfileQueueConfigSummary, 0)
+
+	err := cr.readSource(&theProfileQueueConfig)
+
+	if err != nil {
+		return err
+	}
+
+	var queueConfigs []*connect.RoutingProfileQueueConfig
+
+	for _, v := range theProfileQueueConfig {
+		queueConfigs = append(queueConfigs, &connect.RoutingProfileQueueConfig{
+			Priority: v.Priority,
+			Delay:    v.Delay,
+			QueueReference: &connect.RoutingProfileQueueReference{
+				QueueId: v.QueueId,
+				Channel: v.Channel,
+			},
+		})
+	}
+
+	//queueProfile := connect.UpdateRoutingProfileQueuesInput{
+	//	RoutingProfileId: aws.String(cr.NewName),
+	//	InstanceId:       cr.ConnectInstanceId,
+	//	QueueConfigs:     queueConfigs,
+	//}
+	////First update the flow name
+	//
+	//fmt.Println(queueProfile)
+	//result, err := connectSvc.UpdateRoutingProfileQueues(&queueProfile)
+	//fmt.Println(result)
 	return err
 }
 
 func (cr ConnectRestore) readSource(destination interface{}) error {
 	s3Location, _ := url.Parse(cr.Source)
 	if s3Location.Scheme == "s3" {
+		cr.location = s3Source
+		cr.url = *s3Location
 		var stream io.ReadCloser
 		s3Svc := s3.New(&cr.Session)
 
@@ -221,6 +285,7 @@ func (cr ConnectRestore) readSource(destination interface{}) error {
 		err = jsonutil.UnmarshalJSON(destination, stream)
 
 	} else {
+		cr.location = fileSource
 		//Assume it's a file, try opening it
 		byte, err := ioutil.ReadFile(cr.Source)
 		if err != nil {
@@ -251,9 +316,7 @@ func (cr ConnectRestore) restoreFlow() error {
 		awsutil.Copy(&newFlow, &theFlow)
 		newFlow.Name = aws.String(cr.NewName)
 		newFlow.InstanceId = cr.ConnectInstanceId
-
-		newFlow.Tags["restored-by"] = aws.String("https://github.com/sethkor/connect-backup")
-		newFlow.Tags["restored-date"] = aws.String(time.Now().UTC().String())
+		newFlow.Tags = nil
 
 		_, err = connectSvc.CreateContactFlow(&newFlow)
 

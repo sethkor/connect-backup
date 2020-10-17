@@ -21,17 +21,11 @@ var (
 
 	pRestoreCommand = app.Command("restore", "Restore a connect component")
 	pType           = pRestoreCommand.Flag("type", "type to restore.  must be one of flow,routing-profile,user,user-hierarchy-group,user-hierarchy-structure").Required().Enum(
-		string(connect_backup.Flow),
-		string(connect_backup.RoutingProfile),
-		string(connect_backup.User),
-		string(connect_backup.UserHierarchyGroup),
+		string(connect_backup.Flows),
+		string(connect_backup.RoutingProfiles),
+		string(connect_backup.Users),
+		string(connect_backup.UserHierarchyGroups),
 		string(connect_backup.UserHierarchyStructure))
-	//pFlow = pRestoreCommand.Command("flow", "Restore a flow") //pRestoreCommand.Flag("flow", "Restore a contact flow").Default("false").Bool()
-	//pUser                   = pRestoreCommand.Flag("user", "Restore a user").Default("false").Bool()
-	//pUserHierarchyGroup     = pRestoreCommand.Flag("user-hierarchy-group", "Restore a user hierarchy group").Default("false").Bool()
-	//pUserHierarchyStructure = pRestoreCommand.Flag("user-hierarchy-structure", "Restore the user hierarchy structure").Default("false").Bool()
-	//pRoutingProfile         = pRestoreCommand.Flag("routing-profile", "Restore a routing profile").Default("false").Bool()
-
 	pCreate = pRestoreCommand.Flag("create", "Restore contact flow as a new created flow with new name instead of overwriting").String()
 	pSource = pRestoreCommand.Arg("json", "Location of restoration json (s3 URL or file)").Required().String()
 )

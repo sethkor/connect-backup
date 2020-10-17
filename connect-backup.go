@@ -3,6 +3,8 @@ package connect_backup
 import (
 	"log"
 
+	"github.com/aws/aws-sdk-go/aws"
+
 	"github.com/aws/aws-sdk-go/service/connect"
 )
 
@@ -128,18 +130,43 @@ func (cb ConnectBackup) backupRoutingProfile() error {
 
 		for _, v := range output.RoutingProfileSummaryList {
 
-			result, _ := cb.Svc.DescribeRoutingProfile(&connect.DescribeRoutingProfileInput{
+			result, err := cb.Svc.DescribeRoutingProfile(&connect.DescribeRoutingProfileInput{
 				InstanceId:       connectInstanceId,
 				RoutingProfileId: v.Id,
 			})
 
-			err := cb.TheWriter.write(*result.RoutingProfile)
+			if err != nil {
+				log.Println("Failed to describe user routing profile")
+			}
+
+			err = cb.TheWriter.write(*result.RoutingProfile)
 
 			if err != nil {
 				log.Fatal("Failed to write to the destination")
 			}
 
+			err = cb.backupRoutingProfileQueues(*result.RoutingProfile.RoutingProfileId)
+
 		}
+		return true
+	})
+
+	return err
+}
+
+type backupRoutingProfileQueueSummary struct {
+	routingProfile                   string
+	routingProfileQueueConfigSummary connect.RoutingProfileQueueConfigSummary
+}
+
+func (cb ConnectBackup) backupRoutingProfileQueues(routingProfileId string) error {
+	log.Println("Backing up Routing Profile Queues")
+	connectInstanceId := cb.ConnectInstanceId
+	err := cb.Svc.ListRoutingProfileQueuesPages(&connect.ListRoutingProfileQueuesInput{
+		InstanceId:       connectInstanceId,
+		RoutingProfileId: aws.String(routingProfileId),
+	}, func(output *connect.ListRoutingProfileQueuesOutput, b bool) bool {
+		_ = cb.TheWriter.writeList(routingProfileId, output.RoutingProfileQueueConfigSummaryList)
 		return true
 	})
 
