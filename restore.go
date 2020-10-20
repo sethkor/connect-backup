@@ -231,7 +231,7 @@ func (cr ConnectRestore) restoreRoutingProfile() error {
 
 	}
 
-	//err = cr.restoreRoutingProfileQueue(connectSvc)
+	err = cr.restoreRoutingProfileQueue(connectSvc)
 
 	return err
 }
@@ -257,16 +257,24 @@ func (cr ConnectRestore) restoreRoutingProfileQueue(connectSvc *connect.Connect)
 		})
 	}
 
-	//queueProfile := connect.UpdateRoutingProfileQueuesInput{
-	//	RoutingProfileId: aws.String(cr.NewName),
-	//	InstanceId:       cr.ConnectInstanceId,
-	//	QueueConfigs:     queueConfigs,
-	//}
-	////First update the flow name
-	//
-	//fmt.Println(queueProfile)
-	//result, err := connectSvc.UpdateRoutingProfileQueues(&queueProfile)
-	//fmt.Println(result)
+	//For routing profiel queues if there queue is not associated you must associate it.  If it's associated then you
+	//must update it.  We just use brute force here and call both
+	associateQueueProfile := connect.AssociateRoutingProfileQueuesInput{
+		RoutingProfileId: aws.String(cr.NewName),
+		InstanceId:       cr.ConnectInstanceId,
+		QueueConfigs:     queueConfigs,
+	}
+
+	_, err = connectSvc.AssociateRoutingProfileQueues(&associateQueueProfile)
+
+	updateQueueProfile := connect.UpdateRoutingProfileQueuesInput{
+		RoutingProfileId: aws.String(cr.NewName),
+		InstanceId:       cr.ConnectInstanceId,
+		QueueConfigs:     queueConfigs,
+	}
+	//First update the flow name
+
+	_, err = connectSvc.UpdateRoutingProfileQueues(&updateQueueProfile)
 	return err
 }
 
