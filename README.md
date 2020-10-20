@@ -105,10 +105,10 @@ Currently, there is no API call to describe or create queues.  When the API beco
 You can restore AWS Connect elements you have previously backed up:
 
 - [X] Published Call Flows (The AWS API restricts this to published flows only)
-- [X] Routing Profiles (except Queues)
+- [X] Routing Profiles including Routing Profile Queues
 - [X] User Data (except Passwords)
 - [ ] User Hierarchy Groups
-- [ ] User Hierarchy 
+- [X] User Hierarchy 
 
 The `--create` flg will allow you to create a new element, rather than overwriting the existing one.
 
