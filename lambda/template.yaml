@@ -34,7 +34,7 @@ Resources:
     Properties:
         Description: "A Periodic trigger for backing up AWS Connect via Lambda"
         Name: Aws-Connect-Backup
-        ScheduleExpression: "rate(2 minutes)"  #Change this to your desired frequency eg (5 minutes)
+        ScheduleExpression: "rate(1 hour)"  #Change this to your desired frequency eg (5 minutes)
         State: ENABLED
         Targets:
           - Arn: !GetAtt ConnectBackupLambda.Arn
