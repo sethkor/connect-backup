@@ -18,6 +18,7 @@ var (
 	pBackupCommand = app.Command("backup", "Backup your instance")
 	pFile          = pBackupCommand.Flag("file", "Write output to file with the provided path").ExistingDir()
 	pS3            = pBackupCommand.Flag("s3", "Write file to S3 destination with path as a url").URL()
+	pRawFlow       = pBackupCommand.Flag("flows-raw", "writes the raw flow as an unescaped json object without the encapsulating connect ContactFlow object data").Default("false").Bool()
 
 	pRestoreCommand = app.Command("restore", "Restore a connect component")
 	pType           = pRestoreCommand.Flag("type", "Type to restore.  must be one of flow,routing-profile,user,user-hierarchy-group,user-hierarchy-structure").Required().Enum(
@@ -59,10 +60,12 @@ func main() {
 		} else if *pS3 != nil {
 			theWriter = &connect_backup.S3Writer{Destination: *(*pS3), Sess: sess}
 		}
+
 		cb := connect_backup.ConnectBackup{
 			ConnectInstanceId: pInstance,
 			TheWriter:         theWriter,
 			Svc:               connect.New(sess),
+			RawFlow:           *pRawFlow,
 		}
 		err = cb.Backup()
 

@@ -83,16 +83,23 @@ the stack.
 
 ## What is included in the backup
 - [X] Published Call Flows (The AWS API restricts this to published flows only)
+- [X] Raw Call flows as json objects without AWS Connect provisioning metadata
 - [X] Routing Profiles including Routing Profile Queues
 - [X] User Data (except Passwords)
 - [X] User Hierarchy Groups
 - [X] User Hierarchy 
 
+For contact flows, the actual flow is a json object encapsulated within the connect json flow object.  If you wish to export also just
+the flow as a json object, pass the `--flows-raw` flag and it will write the contact flow itself as a seperate json in 
+the `flows-raw` directory of prefix.  This seperate raw flow is for informational purposes only and is not involved in restoration.
+
 connect-backup use a directory/prefix (see what I did there?) structure so everything is neat and tidy.  If the structure
 is not there it will create it on the fly:
 ```
 your-connect-backup-workspace
+   ├──common
    ├──flows
+   ├──flows-raw
    ├──routing-profiles
    ├──users
    └──user-hierarchy-groups

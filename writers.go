@@ -2,6 +2,7 @@ package connect_backup
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -20,6 +21,7 @@ import (
 type Writer interface {
 	write(result interface{}) error
 	writeList(name string, result interface{}) error
+	writeFlowString(name string, flow string) error
 }
 
 type FileWriter struct {
@@ -77,9 +79,16 @@ func buildPrefixList(name string, result interface{}) (string, error) {
 	return objectPrefix, nil
 }
 
+func prettyJSON(flow string) (bytes.Buffer, error) {
+	var prettyJSON bytes.Buffer
+	err := json.Indent(&prettyJSON, []byte(flow), "", "  ")
+	return prettyJSON, err
+}
+
 func (fw *FileWriter) InitDirs() {
 	//ensure the needed child dirs are present
 	os.Mkdir(fw.Path+pathSeparator+string(Flows)+"s", 0744)
+	os.Mkdir(fw.Path+pathSeparator+string(FlowsRaw), 0744)
 	os.Mkdir(fw.Path+pathSeparator+string(RoutingProfiles)+"s", 0744)
 	os.Mkdir(fw.Path+pathSeparator+string(RoutingProfileQueues)+"s", 0744)
 	os.Mkdir(fw.Path+pathSeparator+string(Users)+"s", 0744)
@@ -125,6 +134,19 @@ func (fw *FileWriter) write(result interface{}) error {
 	return fw.writeRawFile(filePrefix, result)
 }
 
+func (fw *FileWriter) writeFlowString(fileName string, flow string) error {
+	//for each contact flow, write to a file with the name contact flow.
+
+	filePrefix := string(FlowsRaw) + "/" + fileName + jsonExtn
+
+	prettyString, err := prettyJSON(flow)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(fw.Path+string(os.PathSeparator)+filePrefix, prettyString.Bytes(), 0644)
+}
+
 func (s3w *S3Writer) writeRawObj(objectPrefix string, result interface{}) error {
 	if s3w.Destination.Scheme != "s3" {
 		return errors.New("URL passes is not for S3")
@@ -168,6 +190,34 @@ func (s3w *S3Writer) writeList(name string, result interface{}) error {
 	return s3w.writeRawObj(objectPrefix, result)
 }
 
+func (s3w *S3Writer) writeFlowString(fileName string, flow string) error {
+	//for each contact flow, write to a file with the name contact flow.
+
+	objectPrefix := string(FlowsRaw) + "/" + fileName + jsonExtn
+
+	if s3w.Destination.Scheme != "s3" {
+		return errors.New("URL passes is not for S3")
+	}
+
+	prettyString, err := prettyJSON(flow)
+	if err != nil {
+		return err
+	}
+
+	svc := s3.New(s3w.Sess)
+
+	_, err = svc.PutObject(&s3.PutObjectInput{
+		ACL:    aws.String(s3.ObjectCannedACLBucketOwnerFullControl),
+		Bucket: aws.String(s3w.Destination.Host),
+		Body:   bytes.NewReader(prettyString.Bytes()),
+		Key:    aws.String(s3w.Destination.Path + "/" + objectPrefix),
+	})
+
+	return err
+
+	return s3w.writeRawObj(objectPrefix, flow)
+}
+
 func (*StdoutWriter) write(result interface{}) error {
 
 	json, err := jsonutil.BuildJSON(result)
@@ -188,4 +238,12 @@ func (*StdoutWriter) writeList(_ string, result interface{}) error {
 	}
 	fmt.Println(string(json))
 	return nil
+}
+
+func (fw *StdoutWriter) writeFlowString(_ string, flow string) error {
+
+	prettyString, err := prettyJSON(flow)
+	fmt.Println(prettyString.String())
+
+	return err
 }
