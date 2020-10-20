@@ -12,6 +12,7 @@ type ConnectBackup struct {
 	ConnectInstanceId *string
 	Svc               *connect.Connect
 	TheWriter         Writer
+	RawFlow           bool
 }
 
 func (cb ConnectBackup) backupFlows() error {
@@ -35,7 +36,15 @@ func (cb ConnectBackup) backupFlows() error {
 			err = cb.TheWriter.write(*result.ContactFlow)
 
 			if err != nil {
-				log.Fatal("Failed to write to the destination")
+				log.Fatal("Failed to write flow object to the destination")
+			}
+
+			if cb.RawFlow {
+				err = cb.TheWriter.writeFlowString(*result.ContactFlow.Name, *result.ContactFlow.Content)
+
+				if err != nil {
+					log.Fatal("Failed to write flow string to the destination")
+				}
 			}
 
 		}
