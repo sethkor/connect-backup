@@ -159,6 +159,12 @@ The AWS API appears to have a bug with the UpdateRoutingProfileQueue API current
 #### Why can't I restore a user hierarchy group to be empty?
 The AWS API doesn't accept an empty or nil value for this currently
 
+### What is the Raw Flow?
+Contact flows are json objects stored within another json object.  This means they are escaped and can't be parsed or 
+read easily.  The ecapsulating json object also has other attributes (name, description etc) that are needed for restoration.
+A Raw flow takes this json object within the json object, unescapes it and pretty prints it so you can have a better visual
+representation of your contact flow as a json object.
+
 #### I've found a bug, what do I fo?
 Report it and I'll take a look.
 
