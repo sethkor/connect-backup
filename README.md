@@ -109,7 +109,10 @@ your-connect-backup-workspace
    └──user-hierarchy-groups
 
 ````
-### What about Queues?
+
+If you wish to only backup or export a single contact flow, pass `--flow-name` to the backup comand.
+
+## What about Queues?
 Currently, there is no API call to describe or create queues.  When the API becomes available, I'll add it.
 
 ## Restoration

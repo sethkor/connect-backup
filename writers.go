@@ -214,8 +214,6 @@ func (s3w *S3Writer) writeFlowString(fileName string, flow string) error {
 	})
 
 	return err
-
-	return s3w.writeRawObj(objectPrefix, flow)
 }
 
 func (*StdoutWriter) write(result interface{}) error {
@@ -243,7 +241,9 @@ func (*StdoutWriter) writeList(_ string, result interface{}) error {
 func (fw *StdoutWriter) writeFlowString(_ string, flow string) error {
 
 	prettyString, err := prettyJSON(flow)
-	fmt.Println(prettyString.String())
+	if err == nil {
+		fmt.Println(prettyString.String())
+	}
 
 	return err
 }

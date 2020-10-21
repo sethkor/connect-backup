@@ -17,14 +17,13 @@ type ConnectBackup struct {
 
 func (cb ConnectBackup) backupFlows() error {
 	log.Println("Backing up flows")
-	connectInstanceId := cb.ConnectInstanceId
 	err := cb.Svc.ListContactFlowsPages(&connect.ListContactFlowsInput{
-		InstanceId: connectInstanceId,
+		InstanceId: cb.ConnectInstanceId,
 	}, func(output *connect.ListContactFlowsOutput, b bool) bool {
 		for _, v := range output.ContactFlowSummaryList {
 
 			result, err := cb.Svc.DescribeContactFlow(&connect.DescribeContactFlowInput{
-				InstanceId:    connectInstanceId,
+				InstanceId:    cb.ConnectInstanceId,
 				ContactFlowId: v.Id,
 			})
 
@@ -54,16 +53,61 @@ func (cb ConnectBackup) backupFlows() error {
 	return err
 }
 
+func (cb ConnectBackup) BackupFlowByName(name string) error {
+
+	log.Println("Backing/exporting flow " + name)
+	foundFlow := false
+	err := cb.Svc.ListContactFlowsPages(&connect.ListContactFlowsInput{
+		InstanceId: cb.ConnectInstanceId,
+	}, func(output *connect.ListContactFlowsOutput, b bool) bool {
+		for _, v := range output.ContactFlowSummaryList {
+
+			if *v.Name != name {
+				continue
+			}
+			foundFlow = true
+			result, err := cb.Svc.DescribeContactFlow(&connect.DescribeContactFlowInput{
+				InstanceId:    cb.ConnectInstanceId,
+				ContactFlowId: v.Id,
+			})
+
+			if err != nil {
+				log.Println("Failed to describe flow " + (*v).String())
+				return true
+			}
+
+			err = cb.TheWriter.write(*result.ContactFlow)
+
+			if err != nil {
+				log.Fatal("Failed to write flow object to the destination")
+			}
+
+			if cb.RawFlow {
+				err = cb.TheWriter.writeFlowString(*result.ContactFlow.Name, *result.ContactFlow.Content)
+
+				if err != nil {
+					log.Fatal("Failed to write flow string to the destination")
+				}
+			}
+
+		}
+		return true
+	})
+	if !foundFlow {
+		log.Println("Did not find a contact flow named " + name)
+	}
+	return err
+}
+
 func (cb ConnectBackup) backupUsers() error {
 	log.Println("Backing up users")
-	connectInstanceId := cb.ConnectInstanceId
 	err := cb.Svc.ListUsersPages(&connect.ListUsersInput{
-		InstanceId: connectInstanceId,
+		InstanceId: cb.ConnectInstanceId,
 	}, func(output *connect.ListUsersOutput, b bool) bool {
 		for _, v := range output.UserSummaryList {
 
 			result, err := cb.Svc.DescribeUser(&connect.DescribeUserInput{
-				InstanceId: connectInstanceId,
+				InstanceId: cb.ConnectInstanceId,
 				UserId:     v.Id,
 			})
 
@@ -86,15 +130,14 @@ func (cb ConnectBackup) backupUsers() error {
 
 func (cb ConnectBackup) backupUserHierarchyGroups() error {
 	log.Println("Backing up user hierarchy groups")
-	connectInstanceId := cb.ConnectInstanceId
 	err := cb.Svc.ListUserHierarchyGroupsPages(&connect.ListUserHierarchyGroupsInput{
-		InstanceId: connectInstanceId,
+		InstanceId: cb.ConnectInstanceId,
 	}, func(output *connect.ListUserHierarchyGroupsOutput, b bool) bool {
 
 		for _, v := range output.UserHierarchyGroupSummaryList {
 
 			result, err := cb.Svc.DescribeUserHierarchyGroup(&connect.DescribeUserHierarchyGroupInput{
-				InstanceId:       connectInstanceId,
+				InstanceId:       cb.ConnectInstanceId,
 				HierarchyGroupId: v.Id,
 			})
 
@@ -116,10 +159,9 @@ func (cb ConnectBackup) backupUserHierarchyGroups() error {
 
 func (cb ConnectBackup) backupUserHierarchyStructure() error {
 	log.Println("Backing up hierarchy structures")
-	connectInstanceId := cb.ConnectInstanceId
 
 	result, err := cb.Svc.DescribeUserHierarchyStructure(&connect.DescribeUserHierarchyStructureInput{
-		InstanceId: connectInstanceId,
+		InstanceId: cb.ConnectInstanceId,
 	})
 
 	if err != nil {
@@ -132,15 +174,14 @@ func (cb ConnectBackup) backupUserHierarchyStructure() error {
 
 func (cb ConnectBackup) backupRoutingProfile() error {
 	log.Println("Backing up Routing Profiles")
-	connectInstanceId := cb.ConnectInstanceId
 	err := cb.Svc.ListRoutingProfilesPages(&connect.ListRoutingProfilesInput{
-		InstanceId: connectInstanceId,
+		InstanceId: cb.ConnectInstanceId,
 	}, func(output *connect.ListRoutingProfilesOutput, b bool) bool {
 
 		for _, v := range output.RoutingProfileSummaryList {
 
 			result, err := cb.Svc.DescribeRoutingProfile(&connect.DescribeRoutingProfileInput{
-				InstanceId:       connectInstanceId,
+				InstanceId:       cb.ConnectInstanceId,
 				RoutingProfileId: v.Id,
 			})
 
@@ -170,9 +211,8 @@ type backupRoutingProfileQueueSummary struct {
 
 func (cb ConnectBackup) backupRoutingProfileQueues(routingProfileId string) error {
 	log.Println("Backing up Routing Profile Queues")
-	connectInstanceId := cb.ConnectInstanceId
 	err := cb.Svc.ListRoutingProfileQueuesPages(&connect.ListRoutingProfileQueuesInput{
-		InstanceId:       connectInstanceId,
+		InstanceId:       cb.ConnectInstanceId,
 		RoutingProfileId: aws.String(routingProfileId),
 	}, func(output *connect.ListRoutingProfileQueuesOutput, b bool) bool {
 		_ = cb.TheWriter.writeList(routingProfileId, output.RoutingProfileQueueConfigSummaryList)
