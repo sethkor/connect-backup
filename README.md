@@ -63,8 +63,12 @@ You must trigger the lambda with an event json that contains the connect instanc
 {
   "ConnectInstanceId": "your-AWS-connect-instance-id",
   "S3DestURL": "s3://your-backup-bucket/whatever-prefix-you want-like-the-instance-id"
+  "FlowsRaw": true
 }
 ```
+
+`FlowsRaw`, which is  boolean and doesn't need quotes, follows the same logic as `--flows-raw` on the command line (see below) where the contact flow is also written 
+to it's own file in S3 with pretty print json.
 
 The sam template in `lambda/template.yaml` contains a single sample `AWS::Events::Rule` with an Input that constructs 
 this JSON.  You can add additional `AWS::Events::Rule` to back up other connect instances (or the same one to different 
