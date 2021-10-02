@@ -28,9 +28,9 @@ var (
 		string(connect_backup.Users),
 		string(connect_backup.UserHierarchyGroups),
 		string(connect_backup.UserHierarchyStructure))
-	pCreate = pRestoreCommand.Flag("create", "Restore contact flow as a new created flow with new name instead of overwriting").String()
-	pSource = pRestoreCommand.Arg("json", "Location of restoration json (s3 URL or file)").Required().String()
-	//pDestInstanceArn = pRestoreCommand.Flag("dest-arn", "Arn of the connect instance to restore to if different to the source").String()
+	pCreate          = pRestoreCommand.Flag("create", "Restore contact flow as a new created flow with new name instead of overwriting").String()
+	pSource          = pRestoreCommand.Arg("json", "Location of restoration json (s3 URL or file)").Required().String()
+	pDestInstanceArn = pRestoreCommand.Flag("dest-arn", "Arn of the connect instance to restore to if different to the source").String()
 
 	pRenameFlowsCommand = app.Command("rename-flows", "Rename all demo call flows with a prefix.  Defaults to just the AWS Demo flows")
 	pPrefix             = pRenameFlowsCommand.Flag("prefix", "Prefix to use").Default("~").String()
