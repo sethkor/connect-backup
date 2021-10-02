@@ -314,6 +314,26 @@ func (cr ConnectRestore) readSource(destination interface{}) {
 	}
 }
 
+func (cr ConnectRestore) checkSourceConnectInstance(arn string) bool {
+	connectSvc := connect.New(&cr.Session)
+	found := false
+
+	_ = connectSvc.ListInstancesPages(&connect.ListInstancesInput{}, func(output *connect.ListInstancesOutput, b bool) bool {
+
+		//iterate through the instances
+
+		for _, v := range output.InstanceSummaryList {
+			if *v.Arn == arn {
+				found = true
+				return false
+			}
+		}
+		return true
+	})
+
+	return found
+}
+
 func (cr ConnectRestore) restoreFlow() error {
 
 	//is the location S3 or file?
@@ -323,6 +343,10 @@ func (cr ConnectRestore) restoreFlow() error {
 
 	connectSvc := connect.New(&cr.Session)
 	var err error
+
+	//Check to see if the source is from the same connect account, instance and region.
+	cr.checkSourceConnectInstance(*theFlow.Arn)
+
 	//if we have a new flow name then we are creating a new flow with the backup, rather than restoring over the top of
 	//the old flow.
 	if cr.NewName != "" {
