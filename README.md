@@ -91,7 +91,8 @@ the stack.
 - [X] Routing Profiles including Routing Profile Queues
 - [X] User Data (except Passwords)
 - [X] User Hierarchy Groups
-- [X] User Hierarchy 
+- [X] User Hierarchy
+- [X] Prompt Data (But not any wav files)
 
 For contact flows, the actual flow is a json object encapsulated within the connect json flow object.  If you wish to export also just
 the flow as a json object, pass the `--flows-raw` flag and it will write the contact flow itself as a seperate json in 
@@ -149,6 +150,11 @@ which can help you with sorting and put all the example flows at the bottom of  
 wish to rename **all** contact flows pass the `--all-flows` flag. The default prefix is `~` (you can supply a different one 
 to use) which will mean it will sort the renamed flows at the bottom.  You can run this when you first create a connect
 instance or any time after.  As the Name is really only metadata, renaming flows won't impact any references or live call flows.
+
+## IAM Policy
+You will need to be granted access to the following:
+* sts:GetCallerIdentity
+* TBC
 
 ## FAQ
 #### Can I take a backup json and restore it manually via the AWS Connect Console?

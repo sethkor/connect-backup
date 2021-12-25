@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"path/filepath"
 
+	"github.com/aws/aws-sdk-go/aws/arn"
+
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
@@ -32,6 +34,7 @@ const (
 	Users                  ConnectElement = "user"
 	UserHierarchyGroups    ConnectElement = "user-hierarchy-group"
 	UserHierarchyStructure ConnectElement = "user-hierarchy-structure"
+	Prompts                ConnectElement = "prompt"
 )
 
 type sourceType int
@@ -49,6 +52,8 @@ type ConnectRestore struct {
 	url               url.URL
 	Element           ConnectElement
 	NewName           string
+	destinationArn    arn.ARN
+	sourceArn         arn.ARN
 }
 
 func (cr ConnectRestore) Restore() error {
@@ -312,27 +317,72 @@ func (cr ConnectRestore) readSource(destination interface{}) {
 			log.Fatal("Could not unmarshal json source: " + err.Error())
 		}
 	}
+
 }
 
-func (cr ConnectRestore) checkSourceConnectInstance(arn string) bool {
-	connectSvc := connect.New(&cr.Session)
-	found := false
-
-	_ = connectSvc.ListInstancesPages(&connect.ListInstancesInput{}, func(output *connect.ListInstancesOutput, b bool) bool {
-
-		//iterate through the instances
-
-		for _, v := range output.InstanceSummaryList {
-			if *v.Arn == arn {
-				found = true
-				return false
-			}
-		}
-		return true
-	})
-
-	return found
-}
+//func (cr ConnectRestore) checkSourceConnectInstance(sourceArn string) bool {
+//
+//	//check to see if the arn and the instance id passed on the command line are the same
+//	decodedSourceArn, err := arn.Parse(sourceArn)
+//
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	found := false
+//	//different := false
+//	//decodedDestinationArn := decodedSourceArn
+//	//decodedDestinationArn.Resource = "instance/" + *cr.ConnectInstanceId
+//
+//	//We need the account id, use sts to obtain this and build the destination arn
+//
+//	stsSvc := sts.New(&cr.Session)
+//
+//	result, err := stsSvc.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	cr.destinationArn, err = arn.Parse(*result.Arn)
+//
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	cr.destinationArn.Resource = "instance/" + *cr.ConnectInstanceId
+//
+//	//check the account id, want to make sure it's a match otherwise we can exit from here
+//	//there may be a better way to do this but it will do for now.
+//	if cr.destinationArn.AccountID != decodedSourceArn.AccountID {
+//		//source and destination account id are different
+//		return found
+//	}
+//
+//	if !strings.HasPrefix(decodedSourceArn.Resource, cr.destinationArn.Resource+"/") {
+//		//source and destination instance id are different
+//		return found
+//	}
+//
+//	//List all connect instances
+//	connectSvc := connect.New(&cr.Session)
+//
+//	_ = connectSvc.ListInstancesPages(&connect.ListInstancesInput{}, func(output *connect.ListInstancesOutput, b bool) bool {
+//
+//		//iterate through the instances
+//
+//		for _, v := range output.InstanceSummaryList {
+//
+//			decodeReturnedArn, _ := arn.Parse(*v.Arn)
+//
+//			if strings.HasPrefix(decodeReturnedArn.Resource, cr.destinationArn.Resource) {
+//				found = true
+//				break
+//			}
+//		}
+//		return found
+//	})
+//
+//	return found
+//}
 
 func (cr ConnectRestore) restoreFlow() error {
 
@@ -341,11 +391,21 @@ func (cr ConnectRestore) restoreFlow() error {
 
 	cr.readSource(&theFlow)
 
-	connectSvc := connect.New(&cr.Session)
-	var err error
+	var err error = nil
+	cr.sourceArn, err = arn.Parse(*theFlow.Arn)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	//Check to see if the source is from the same connect account, instance and region.
-	cr.checkSourceConnectInstance(*theFlow.Arn)
+	connectSvc := connect.New(&cr.Session)
+
+	//Check to see if the source is from the same connect account, instance or region.
+	//if !cr.checkSourceConnectInstance(*theFlow.Arn) {
+	//	//the source is from a different connect account, instance or region to the destination.  The flow can only be
+	//	//restored if there are no ARNS in flow for things like queues, announcements etc.
+	//	log.Fatal("Restoration of flow is only possible to same connect account, instance and region at this time")
+	//
+	//}
 
 	//if we have a new flow name then we are creating a new flow with the backup, rather than restoring over the top of
 	//the old flow.
