@@ -37,8 +37,8 @@ type StdoutWriter struct {
 }
 
 const (
-	common        = "common"
-	unknown       = "unknown"
+	common = "common"
+	//unknown       = "unknown"
 	pathSeparator = string(os.PathSeparator)
 	jsonExtn      = ".json"
 )
@@ -58,6 +58,8 @@ func buildPrefix(result interface{}) (string, error) {
 		objectPrefix = string(Users) + "/" + *result.(connect.User).Username + jsonExtn
 	case connect.HierarchyGroup:
 		objectPrefix = string(UserHierarchyGroups) + "/" + *result.(connect.HierarchyGroup).Name + jsonExtn
+	case connect.HoursOfOperation:
+		objectPrefix = string(HoursOfOperation) + "/" + *result.(connect.HoursOfOperation).Name + jsonExtn
 	case connect.HierarchyStructure:
 		objectPrefix = common + "/" + string(UserHierarchyStructure) + jsonExtn
 	default:
@@ -87,17 +89,42 @@ func prettyJSON(flow string) (bytes.Buffer, error) {
 	return prettyJSON, err
 }
 
-func (fw *FileWriter) InitDirs(instanceId string) {
+func (fw *FileWriter) InitDirs(instanceId string) error {
 	//ensure the needed child dirs are present
-	os.MkdirAll(fw.Path+pathSeparator+string(Flows), 0744)
-	os.MkdirAll(fw.Path+pathSeparator+string(FlowsRaw), 0744)
-	os.MkdirAll(fw.Path+pathSeparator+string(RoutingProfiles), 0744)
-	os.MkdirAll(fw.Path+pathSeparator+string(RoutingProfileQueues), 0744)
-	os.MkdirAll(fw.Path+pathSeparator+string(Users), 0744)
-	os.MkdirAll(fw.Path+pathSeparator+string(UserHierarchyGroups), 0744)
-	os.MkdirAll(fw.Path+pathSeparator+string(Prompts), 0744)
-	os.MkdirAll(fw.Path+pathSeparator+common, 0744)
-
+	err := os.MkdirAll(fw.Path+pathSeparator+string(Flows), 0744)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(fw.Path+pathSeparator+string(FlowsRaw), 0744)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(fw.Path+pathSeparator+string(RoutingProfiles), 0744)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(fw.Path+pathSeparator+string(RoutingProfileQueues), 0744)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(fw.Path+pathSeparator+string(Users), 0744)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(fw.Path+pathSeparator+string(UserHierarchyGroups), 0744)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(fw.Path+pathSeparator+string(Prompts), 0744)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(fw.Path+pathSeparator+string(HoursOfOperation), 0744)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(fw.Path+pathSeparator+common, 0744)
+	return err
 }
 
 //As some AWS connect elements are listed and don't have unique ids, we need to sometimes pass a name around

@@ -22,3 +22,17 @@ var defaultFlows = map[string]bool{
 	"Sample interruptible queue flow with callback":  true,
 	"Sample secure input with agent":                 true,
 }
+
+type ConnectElement string
+
+const (
+	Flows                  ConnectElement = "flows"
+	FlowsRaw               ConnectElement = "flows-raw"
+	RoutingProfiles        ConnectElement = "routing-profiles"
+	RoutingProfileQueues   ConnectElement = "routing-profile-queues"
+	Users                  ConnectElement = "users"
+	UserHierarchyGroups    ConnectElement = "user-hierarchy-groups"
+	UserHierarchyStructure ConnectElement = "user-hierarchy-structures"
+	Prompts                ConnectElement = "prompts"
+	HoursOfOperation       ConnectElement = "hours-of-operation"
+)
