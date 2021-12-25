@@ -229,7 +229,7 @@ func (cb ConnectBackup) backupPrompts() error {
 		InstanceId: cb.ConnectInstance.Id,
 	})
 
-	_ = cb.TheWriter.writeList(*cb.ConnectInstance.Id, result.PromptSummaryList)
+	_ = cb.TheWriter.writeList(string(Prompts)+"s", result.PromptSummaryList)
 	return err
 
 }

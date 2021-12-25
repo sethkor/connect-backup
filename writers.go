@@ -49,15 +49,15 @@ func buildPrefix(result interface{}) (string, error) {
 
 	switch result.(type) {
 	case connect.ContactFlow:
-		objectPrefix = string(Flows) + "s/" + *result.(connect.ContactFlow).Name + jsonExtn
+		objectPrefix = string(Flows) + "/" + *result.(connect.ContactFlow).Name + jsonExtn
 	case connect.RoutingProfile:
-		objectPrefix = string(RoutingProfiles) + "s/" + *result.(connect.RoutingProfile).Name + jsonExtn
+		objectPrefix = string(RoutingProfiles) + "/" + *result.(connect.RoutingProfile).Name + jsonExtn
 	case backupRoutingProfileQueueSummary:
-		objectPrefix = string(RoutingProfileQueues) + "s/" + result.(backupRoutingProfileQueueSummary).routingProfile + jsonExtn
+		objectPrefix = string(RoutingProfileQueues) + "/" + result.(backupRoutingProfileQueueSummary).routingProfile + jsonExtn
 	case connect.User:
-		objectPrefix = string(Users) + "s/" + *result.(connect.User).Username + jsonExtn
+		objectPrefix = string(Users) + "/" + *result.(connect.User).Username + jsonExtn
 	case connect.HierarchyGroup:
-		objectPrefix = string(UserHierarchyGroups) + "s/" + *result.(connect.HierarchyGroup).Name + jsonExtn
+		objectPrefix = string(UserHierarchyGroups) + "/" + *result.(connect.HierarchyGroup).Name + jsonExtn
 	case connect.HierarchyStructure:
 		objectPrefix = common + "/" + string(UserHierarchyStructure) + jsonExtn
 	default:
@@ -72,9 +72,9 @@ func buildPrefixList(name string, result interface{}) (string, error) {
 
 	switch result.(type) {
 	case []*connect.RoutingProfileQueueConfigSummary:
-		objectPrefix = string(RoutingProfileQueues) + "s/" + name + jsonExtn
+		objectPrefix = string(RoutingProfileQueues) + "/" + name + jsonExtn
 	case []*connect.PromptSummary:
-		objectPrefix = string(Prompts) + "s/" + name + jsonExtn
+		objectPrefix = string(Prompts) + "/" + name + jsonExtn
 	default:
 		return "", errors.New("unexpected type passed to writer")
 	}
@@ -89,13 +89,13 @@ func prettyJSON(flow string) (bytes.Buffer, error) {
 
 func (fw *FileWriter) InitDirs(instanceId string) {
 	//ensure the needed child dirs are present
-	os.MkdirAll(fw.Path+pathSeparator+string(Flows)+"s", 0744)
+	os.MkdirAll(fw.Path+pathSeparator+string(Flows), 0744)
 	os.MkdirAll(fw.Path+pathSeparator+string(FlowsRaw), 0744)
-	os.MkdirAll(fw.Path+pathSeparator+string(RoutingProfiles)+"s", 0744)
-	os.MkdirAll(fw.Path+pathSeparator+string(RoutingProfileQueues)+"s", 0744)
-	os.MkdirAll(fw.Path+pathSeparator+string(Users)+"s", 0744)
-	os.MkdirAll(fw.Path+pathSeparator+string(UserHierarchyGroups)+"s", 0744)
-	os.MkdirAll(fw.Path+pathSeparator+string(Prompts)+"s", 0744)
+	os.MkdirAll(fw.Path+pathSeparator+string(RoutingProfiles), 0744)
+	os.MkdirAll(fw.Path+pathSeparator+string(RoutingProfileQueues), 0744)
+	os.MkdirAll(fw.Path+pathSeparator+string(Users), 0744)
+	os.MkdirAll(fw.Path+pathSeparator+string(UserHierarchyGroups), 0744)
+	os.MkdirAll(fw.Path+pathSeparator+string(Prompts), 0744)
 	os.MkdirAll(fw.Path+pathSeparator+common, 0744)
 
 }
