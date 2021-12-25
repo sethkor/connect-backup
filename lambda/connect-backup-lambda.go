@@ -75,11 +75,17 @@ func HandleRequest(ctx context.Context, backupRequest Request) (Response, error)
 	}
 	log.Println("FlowsRaw : " + strconv.FormatBool(flowsRaw))
 
-	cb := connect_backup.ConnectBackup{ConnectInstanceId: &instanceId,
+	connectSvc := connect.New(sess)
+	result, err := connectSvc.DescribeInstance(&connect.DescribeInstanceInput{
+		InstanceId: &instanceId,
+	})
+
+	cb := connect_backup.ConnectBackup{ConnectInstance: *result.Instance,
 		Svc:       svc,
 		TheWriter: &connect_backup.S3Writer{Destination: *s3Url, Sess: sess},
 		RawFlow:   flowsRaw,
 	}
+
 	err = cb.Backup()
 
 	if err != nil {
