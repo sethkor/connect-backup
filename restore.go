@@ -24,19 +24,6 @@ import (
 	"github.com/sethvargo/go-password/password"
 )
 
-type ConnectElement string
-
-const (
-	Flows                  ConnectElement = "flows"
-	FlowsRaw               ConnectElement = "flows-raw"
-	RoutingProfiles        ConnectElement = "routing-profiles"
-	RoutingProfileQueues   ConnectElement = "routing-profile-queues"
-	Users                  ConnectElement = "users"
-	UserHierarchyGroups    ConnectElement = "user-hierarchy-groups"
-	UserHierarchyStructure ConnectElement = "user-hierarchy-structures"
-	Prompts                ConnectElement = "prompts"
-)
-
 type sourceType int
 
 const (
@@ -52,8 +39,8 @@ type ConnectRestore struct {
 	url               url.URL
 	Element           ConnectElement
 	NewName           string
-	destinationArn    arn.ARN
-	sourceArn         arn.ARN
+	//destinationArn    arn.ARN
+	sourceArn arn.ARN
 }
 
 func (cr ConnectRestore) Restore() error {
@@ -248,7 +235,7 @@ func (cr ConnectRestore) restoreRoutingProfileQueue(connectSvc *connect.Connect)
 
 	cr.readSource(&theProfileQueueConfig)
 
-	var err error = nil
+	var err error
 
 	var queueConfigs []*connect.RoutingProfileQueueConfig
 

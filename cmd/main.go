@@ -28,9 +28,9 @@ var (
 		string(connect_backup.Users),
 		string(connect_backup.UserHierarchyGroups),
 		string(connect_backup.UserHierarchyStructure))
-	pCreate          = pRestoreCommand.Flag("create", "Restore contact flow as a new created flow with new name instead of overwriting").String()
-	pSource          = pRestoreCommand.Arg("json", "Location of restoration json (s3 URL or file)").Required().String()
-	pDestInstanceArn = pRestoreCommand.Flag("dest-arn", "Arn of the connect instance to restore to if different to the source").String()
+	pCreate = pRestoreCommand.Flag("create", "Restore contact flow as a new created flow with new name instead of overwriting").String()
+	pSource = pRestoreCommand.Arg("json", "Location of restoration json (s3 URL or file)").Required().String()
+	//pDestInstanceArn = pRestoreCommand.Flag("dest-arn", "Arn of the connect instance to restore to if different to the source").String()
 
 	pRenameFlowsCommand = app.Command("rename-flows", "Rename all demo call flows with a prefix.  Defaults to just the AWS Demo flows")
 	pPrefix             = pRenameFlowsCommand.Flag("prefix", "Prefix to use").Default("~").String()
@@ -69,7 +69,11 @@ func main() {
 		var theWriter connect_backup.Writer = &connect_backup.StdoutWriter{}
 		if *pFile != "" {
 			theWriter = &connect_backup.FileWriter{Path: *pFile + string(os.PathSeparator) + *result.Instance.Id}
-			theWriter.(*connect_backup.FileWriter).InitDirs(*result.Instance.Id)
+			err := theWriter.(*connect_backup.FileWriter).InitDirs(*result.Instance.Id)
+			if err != nil {
+				log.Println("Could not initialise the destination folders")
+				log.Fatal(err)
+			}
 		} else if *pS3 != nil {
 			theWriter = &connect_backup.S3Writer{Destination: *(*pS3), Sess: sess}
 		}
