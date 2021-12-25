@@ -87,16 +87,16 @@ func prettyJSON(flow string) (bytes.Buffer, error) {
 	return prettyJSON, err
 }
 
-func (fw *FileWriter) InitDirs() {
+func (fw *FileWriter) InitDirs(instanceId string) {
 	//ensure the needed child dirs are present
-	os.Mkdir(fw.Path+pathSeparator+string(Flows)+"s", 0744)
-	os.Mkdir(fw.Path+pathSeparator+string(FlowsRaw), 0744)
-	os.Mkdir(fw.Path+pathSeparator+string(RoutingProfiles)+"s", 0744)
-	os.Mkdir(fw.Path+pathSeparator+string(RoutingProfileQueues)+"s", 0744)
-	os.Mkdir(fw.Path+pathSeparator+string(Users)+"s", 0744)
-	os.Mkdir(fw.Path+pathSeparator+string(UserHierarchyGroups)+"s", 0744)
-	os.Mkdir(fw.Path+pathSeparator+string(Prompts)+"s", 0744)
-	os.Mkdir(fw.Path+pathSeparator+common, 0744)
+	os.MkdirAll(fw.Path+pathSeparator+string(Flows)+"s", 0744)
+	os.MkdirAll(fw.Path+pathSeparator+string(FlowsRaw), 0744)
+	os.MkdirAll(fw.Path+pathSeparator+string(RoutingProfiles)+"s", 0744)
+	os.MkdirAll(fw.Path+pathSeparator+string(RoutingProfileQueues)+"s", 0744)
+	os.MkdirAll(fw.Path+pathSeparator+string(Users)+"s", 0744)
+	os.MkdirAll(fw.Path+pathSeparator+string(UserHierarchyGroups)+"s", 0744)
+	os.MkdirAll(fw.Path+pathSeparator+string(Prompts)+"s", 0744)
+	os.MkdirAll(fw.Path+pathSeparator+common, 0744)
 
 }
 

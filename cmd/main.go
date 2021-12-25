@@ -53,21 +53,32 @@ func main() {
 	var err error
 	sess := connect_backup.GetAwsSession(*pProfile, *pRegion)
 
+	//Validate the instance id
+	connectSvc := connect.New(sess)
+	result, err := connectSvc.DescribeInstance(&connect.DescribeInstanceInput{
+		InstanceId: pInstance,
+	})
+
+	if err != nil {
+		log.Println("Connect Instance not found in this account.  This may also be an IAM permissions issue")
+		log.Fatal(err)
+	}
+
 	switch command {
 	case pBackupCommand.FullCommand():
 		var theWriter connect_backup.Writer = &connect_backup.StdoutWriter{}
 		if *pFile != "" {
-			theWriter = &connect_backup.FileWriter{Path: *pFile}
-			theWriter.(*connect_backup.FileWriter).InitDirs()
+			theWriter = &connect_backup.FileWriter{Path: *pFile + string(os.PathSeparator) + *result.Instance.Id}
+			theWriter.(*connect_backup.FileWriter).InitDirs(*result.Instance.Id)
 		} else if *pS3 != nil {
 			theWriter = &connect_backup.S3Writer{Destination: *(*pS3), Sess: sess}
 		}
 
 		cb := connect_backup.ConnectBackup{
-			ConnectInstanceId: pInstance,
-			TheWriter:         theWriter,
-			Svc:               connect.New(sess),
-			RawFlow:           *pRawFlow,
+			ConnectInstance: *result.Instance,
+			TheWriter:       theWriter,
+			Svc:             connect.New(sess),
+			RawFlow:         *pRawFlow,
 		}
 
 		if *pFlowName == "" {
@@ -89,8 +100,8 @@ func main() {
 
 	case pRenameFlowsCommand.FullCommand():
 		cb := connect_backup.ConnectBackup{
-			ConnectInstanceId: pInstance,
-			Svc:               connect.New(sess),
+			ConnectInstance: *result.Instance,
+			Svc:             connect.New(sess),
 		}
 
 		err = cb.RenameFlows(*pPrefix, *pAllFlows)
