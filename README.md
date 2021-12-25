@@ -102,13 +102,13 @@ connect-backup use a directory/prefix (see what I did there?) structure so every
 is not there it will create it on the fly:
 ```
 your-connect-backup-workspace
-   ├──common
-   ├──flows
-   ├──flows-raw
-   ├──routing-profiles
-   ├──users
-   └──user-hierarchy-groups
-
+   └──your-connect-instance-id
+       ├──common
+       ├──flows
+       ├──flows-raw
+       ├──routing-profiles
+       ├──users
+       └──user-hierarchy-groups
 ````
 
 If you wish to only backup or export a single contact flow, pass `--flow-name` to the backup comand.
