@@ -27,14 +27,14 @@ import (
 type ConnectElement string
 
 const (
-	Flows                  ConnectElement = "flow"
+	Flows                  ConnectElement = "flows"
 	FlowsRaw               ConnectElement = "flows-raw"
-	RoutingProfiles        ConnectElement = "routing-profile"
-	RoutingProfileQueues   ConnectElement = "routing-profile-queue"
-	Users                  ConnectElement = "user"
-	UserHierarchyGroups    ConnectElement = "user-hierarchy-group"
-	UserHierarchyStructure ConnectElement = "user-hierarchy-structure"
-	Prompts                ConnectElement = "prompt"
+	RoutingProfiles        ConnectElement = "routing-profiles"
+	RoutingProfileQueues   ConnectElement = "routing-profile-queues"
+	Users                  ConnectElement = "users"
+	UserHierarchyGroups    ConnectElement = "user-hierarchy-groups"
+	UserHierarchyStructure ConnectElement = "user-hierarchy-structures"
+	Prompts                ConnectElement = "prompts"
 )
 
 type sourceType int

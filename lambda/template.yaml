@@ -39,7 +39,7 @@ Resources:
         Targets:
           - Arn: !GetAtt ConnectBackupLambda.Arn
             Id: "AWS_Connect__Backup_Lambda"
-            Input: !Sub '{"ConnectInstanceId" : "${connectInstanceId}", "S3DestUrl" : "s3://${s3Bucket}/${connectInstanceId}","FlowsRaw": true}'
+            Input: !Sub '{"ConnectInstanceId" : "${connectInstanceId}", "S3DestUrl" : "s3://${s3Bucket}","FlowsRaw": true}'
   permissionForEventsToInvokeLambda:
     Type: AWS::Lambda::Permission
     Properties:
