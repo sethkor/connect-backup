@@ -8,9 +8,6 @@ import (
 	"log"
 	"net/url"
 	"path/filepath"
-	"strings"
-
-	"github.com/aws/aws-sdk-go/service/sts"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 
@@ -323,69 +320,69 @@ func (cr ConnectRestore) readSource(destination interface{}) {
 
 }
 
-func (cr ConnectRestore) checkSourceConnectInstance(sourceArn string) bool {
-
-	//check to see if the arn and the instance id passed on the command line are the same
-	decodedSourceArn, err := arn.Parse(sourceArn)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-	found := false
-	//different := false
-	//decodedDestinationArn := decodedSourceArn
-	//decodedDestinationArn.Resource = "instance/" + *cr.ConnectInstanceId
-
-	//We need the account id, use sts to obtain this and build the destination arn
-
-	stsSvc := sts.New(&cr.Session)
-
-	result, err := stsSvc.GetCallerIdentity(&sts.GetCallerIdentityInput{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	cr.destinationArn, err = arn.Parse(*result.Arn)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	cr.destinationArn.Resource = "instance/" + *cr.ConnectInstanceId
-
-	//check the account id, want to make sure it's a match otherwise we can exit from here
-	//there may be a better way to do this but it will do for now.
-	if cr.destinationArn.AccountID != decodedSourceArn.AccountID {
-		//source and destination account id are different
-		return found
-	}
-
-	if !strings.HasPrefix(decodedSourceArn.Resource, cr.destinationArn.Resource+"/") {
-		//source and destination instance id are different
-		return found
-	}
-
-	//List all connect instances
-	connectSvc := connect.New(&cr.Session)
-
-	_ = connectSvc.ListInstancesPages(&connect.ListInstancesInput{}, func(output *connect.ListInstancesOutput, b bool) bool {
-
-		//iterate through the instances
-
-		for _, v := range output.InstanceSummaryList {
-
-			decodeReturnedArn, _ := arn.Parse(*v.Arn)
-
-			if strings.HasPrefix(decodeReturnedArn.Resource, cr.destinationArn.Resource) {
-				found = true
-				break
-			}
-		}
-		return found
-	})
-
-	return found
-}
+//func (cr ConnectRestore) checkSourceConnectInstance(sourceArn string) bool {
+//
+//	//check to see if the arn and the instance id passed on the command line are the same
+//	decodedSourceArn, err := arn.Parse(sourceArn)
+//
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	found := false
+//	//different := false
+//	//decodedDestinationArn := decodedSourceArn
+//	//decodedDestinationArn.Resource = "instance/" + *cr.ConnectInstanceId
+//
+//	//We need the account id, use sts to obtain this and build the destination arn
+//
+//	stsSvc := sts.New(&cr.Session)
+//
+//	result, err := stsSvc.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	cr.destinationArn, err = arn.Parse(*result.Arn)
+//
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	cr.destinationArn.Resource = "instance/" + *cr.ConnectInstanceId
+//
+//	//check the account id, want to make sure it's a match otherwise we can exit from here
+//	//there may be a better way to do this but it will do for now.
+//	if cr.destinationArn.AccountID != decodedSourceArn.AccountID {
+//		//source and destination account id are different
+//		return found
+//	}
+//
+//	if !strings.HasPrefix(decodedSourceArn.Resource, cr.destinationArn.Resource+"/") {
+//		//source and destination instance id are different
+//		return found
+//	}
+//
+//	//List all connect instances
+//	connectSvc := connect.New(&cr.Session)
+//
+//	_ = connectSvc.ListInstancesPages(&connect.ListInstancesInput{}, func(output *connect.ListInstancesOutput, b bool) bool {
+//
+//		//iterate through the instances
+//
+//		for _, v := range output.InstanceSummaryList {
+//
+//			decodeReturnedArn, _ := arn.Parse(*v.Arn)
+//
+//			if strings.HasPrefix(decodeReturnedArn.Resource, cr.destinationArn.Resource) {
+//				found = true
+//				break
+//			}
+//		}
+//		return found
+//	})
+//
+//	return found
+//}
 
 func (cr ConnectRestore) restoreFlow() error {
 
@@ -403,12 +400,12 @@ func (cr ConnectRestore) restoreFlow() error {
 	connectSvc := connect.New(&cr.Session)
 
 	//Check to see if the source is from the same connect account, instance or region.
-	if !cr.checkSourceConnectInstance(*theFlow.Arn) {
-		//the source is from a different connect account, instance or region to the destination.  The flow can only be
-		//restored if there are no ARNS in flow for things like queues, announcements etc.
-		log.Fatal("Restoration of flow is only possible to same connect account, instance and region at this time")
-
-	}
+	//if !cr.checkSourceConnectInstance(*theFlow.Arn) {
+	//	//the source is from a different connect account, instance or region to the destination.  The flow can only be
+	//	//restored if there are no ARNS in flow for things like queues, announcements etc.
+	//	log.Fatal("Restoration of flow is only possible to same connect account, instance and region at this time")
+	//
+	//}
 
 	//if we have a new flow name then we are creating a new flow with the backup, rather than restoring over the top of
 	//the old flow.
