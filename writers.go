@@ -73,6 +73,8 @@ func buildPrefixList(name string, result interface{}) (string, error) {
 	switch result.(type) {
 	case []*connect.RoutingProfileQueueConfigSummary:
 		objectPrefix = string(RoutingProfileQueues) + "s/" + name + jsonExtn
+	case []*connect.PromptSummary:
+		objectPrefix = string(Prompts) + "s/" + name + jsonExtn
 	default:
 		return "", errors.New("unexpected type passed to writer")
 	}
@@ -93,6 +95,7 @@ func (fw *FileWriter) InitDirs() {
 	os.Mkdir(fw.Path+pathSeparator+string(RoutingProfileQueues)+"s", 0744)
 	os.Mkdir(fw.Path+pathSeparator+string(Users)+"s", 0744)
 	os.Mkdir(fw.Path+pathSeparator+string(UserHierarchyGroups)+"s", 0744)
+	os.Mkdir(fw.Path+pathSeparator+string(Prompts)+"s", 0744)
 	os.Mkdir(fw.Path+pathSeparator+common, 0744)
 
 }

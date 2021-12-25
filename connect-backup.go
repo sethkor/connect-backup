@@ -222,9 +222,24 @@ func (cb ConnectBackup) backupRoutingProfileQueues(routingProfileId string) erro
 	return err
 }
 
+func (cb ConnectBackup) backupPrompts() error {
+	log.Println("Backing up Prompts")
+	result, err := cb.Svc.ListPrompts(&connect.ListPromptsInput{
+		InstanceId: cb.ConnectInstanceId,
+	})
+
+	_ = cb.TheWriter.writeList(*cb.ConnectInstanceId, result.PromptSummaryList)
+	return err
+
+}
+
 func (cb ConnectBackup) Backup() error {
 
-	err := cb.backupFlows()
+	err := cb.backupPrompts()
+	if err != nil {
+		return err
+	}
+	err = cb.backupFlows()
 	if err != nil {
 		return err
 	}
@@ -240,8 +255,9 @@ func (cb ConnectBackup) Backup() error {
 	if err != nil {
 		return err
 	}
-	return cb.backupUserHierarchyStructure()
+	err = cb.backupUserHierarchyStructure()
 
+	return err
 }
 
 func (cb ConnectBackup) RenameFlows(prefix string, allFlows bool) error {
