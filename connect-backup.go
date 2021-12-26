@@ -260,6 +260,22 @@ func (cb ConnectBackup) backupHours() error {
 	return err
 }
 
+func (cb ConnectBackup) backupQuickConnects() error {
+	log.Println("Backing up QuickConnects")
+
+	var allOutputs []*connect.QuickConnectSummary
+	err := cb.Svc.ListQuickConnectsPages(&connect.ListQuickConnectsInput{
+		InstanceId: cb.ConnectInstance.Id,
+	}, func(output *connect.ListQuickConnectsOutput, b bool) bool {
+
+		allOutputs = append(allOutputs, output.QuickConnectSummaryList...)
+		return true
+	})
+
+	_ = cb.TheWriter.write(allOutputs)
+	return err
+}
+
 func (cb ConnectBackup) Backup() error {
 
 	err := cb.backupPrompts()
@@ -267,6 +283,10 @@ func (cb ConnectBackup) Backup() error {
 		return err
 	}
 	err = cb.backupHours()
+	if err != nil {
+		return err
+	}
+	err = cb.backupQuickConnects()
 	if err != nil {
 		return err
 	}

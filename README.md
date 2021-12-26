@@ -94,6 +94,7 @@ the stack.
 - [X] User Hierarchy
 - [X] Prompt Data (But not any wav files)
 - [X] Hours of Operation
+- [X] Quick Connects
 
 For contact flows, the actual flow is a json object encapsulated within the connect json flow object.  If you wish to export also just
 the flow as a json object, pass the `--flows-raw` flag and it will write the contact flow itself as a seperate json in 

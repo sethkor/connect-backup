@@ -35,4 +35,5 @@ const (
 	UserHierarchyStructure ConnectElement = "user-hierarchy-structures"
 	Prompts                ConnectElement = "prompts"
 	HoursOfOperation       ConnectElement = "hours-of-operation"
+	QuickConnects          ConnectElement = "quick-connects"
 )
