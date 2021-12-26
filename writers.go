@@ -60,6 +60,8 @@ func buildPrefix(result interface{}) (string, error) {
 		objectPrefix = string(UserHierarchyGroups) + "/" + *result.(connect.HierarchyGroup).Name + jsonExtn
 	case connect.HoursOfOperation:
 		objectPrefix = string(HoursOfOperation) + "/" + *result.(connect.HoursOfOperation).Name + jsonExtn
+	case []*connect.QuickConnectSummary:
+		objectPrefix = string(QuickConnects) + "/" + string(QuickConnects) + jsonExtn
 	case connect.HierarchyStructure:
 		objectPrefix = common + "/" + string(UserHierarchyStructure) + jsonExtn
 	default:
@@ -120,6 +122,10 @@ func (fw *FileWriter) InitDirs(instanceId string) error {
 		return err
 	}
 	err = os.MkdirAll(fw.Path+pathSeparator+string(HoursOfOperation), 0744)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(fw.Path+pathSeparator+string(QuickConnects), 0744)
 	if err != nil {
 		return err
 	}
