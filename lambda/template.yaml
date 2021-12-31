@@ -34,7 +34,7 @@ Resources:
     Properties:
         Description: "A Periodic trigger for backing up AWS Connect via Lambda"
         Name: Aws-Connect-Backup
-        ScheduleExpression: "rate(1 hour)"  #Change this to your desired frequency eg (5 minutes)
+        ScheduleExpression: "rate(3 minutes)"  #Change this to your desired frequency eg (5 minutes)
         State: ENABLED
         Targets:
           - Arn: !GetAtt ConnectBackupLambda.Arn
@@ -72,10 +72,16 @@ Resources:
               Resource: !GetAtt s3Bucket.Arn
             - Effect: Allow
               Action:
+                - ds:DescribeDirectories
+              Resource: "*"
+            - Effect: Allow
+              Action:
                 - connect:ListContactFlow
                 - connect:ListRoutingProfiles
                 - connect:ListUserHierarchyGroups
                 - connect:ListUsers
+                - connect:ListPrompts
+                - connect:ListHoursOfOperations
                 - connect:DescribeUserHierarchyStructure
                 - connect:DescribeInstance
               Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}"
@@ -96,6 +102,14 @@ Resources:
               Action:
                 - connect:DescribeUserHierarchyGroup
               Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/agent-group/*"
+            - Effect: Allow
+              Action:
+                - connect:ListQuickConnects
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/transfer-destination/*"
+            - Effect: Allow
+              Action:
+                - connect:DescribeHoursOfOperation
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/operating-hours/*"
 
 # If you are using S3 endpoints and need your lambda to use a local IP use the commented items below.  Just replace the
 # Security group and subnet ids with your own.
