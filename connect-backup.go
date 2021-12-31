@@ -247,12 +247,16 @@ func (cb ConnectBackup) backupHours() error {
 			})
 			if err != nil {
 				log.Println("Failed to describe Hours of Operation")
+				log.Println(err)
+				return true
 			}
 
 			err = cb.TheWriter.write(*result.HoursOfOperation)
 
 			if err != nil {
+				log.Println(err)
 				log.Fatal("Failed to write to the destination")
+
 			}
 		}
 		return true

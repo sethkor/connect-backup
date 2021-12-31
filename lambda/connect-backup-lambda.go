@@ -32,17 +32,19 @@ func HandleRequest(ctx context.Context, backupRequest Request) (Response, error)
 	if instanceId == "" {
 		instanceId = os.Getenv("CONNECT_INSTANCE_ID")
 		if instanceId == "" {
-			log.Fatalln("No Connect instance ID passed in either the event or as an environment variable CONNECT_INSTANCE_ID")
+			log.Println("No Connect instance ID passed in either the event or as an environment variable CONNECT_INSTANCE_ID")
 		}
 		log.Println("The ConnectInstanceId in the event was blank, using the environment var CONNECT_INSTANCE_ID")
 	}
-	log.Println("Connect Instance: " + instanceId)
-
+	if instanceId != "" {
+		log.Println("Connect Instance: " + instanceId)
+	}
 	s3destination := backupRequest.S3DestURL
 	if s3destination == "" {
 		s3destination = os.Getenv("S3_DEST_URL")
 		if s3destination == "" {
 			log.Fatalln("No S3DestURL passed in either the event or as an environment variable S3_DEST_URL")
+			return Response{Answer: "No S3DestURL passed in either the event or as an environment variable S3_DEST_URL"}, nil
 		}
 		log.Println("The S3DestURL in the event was blank, using the environment var S3_DEST_URL")
 	}
@@ -79,6 +81,11 @@ func HandleRequest(ctx context.Context, backupRequest Request) (Response, error)
 	result, err := connectSvc.DescribeInstance(&connect.DescribeInstanceInput{
 		InstanceId: &instanceId,
 	})
+
+	if err != nil {
+		log.Println("Could not fetch the instance specified")
+		return Response{Answer: "Could not fetch the instance specified"}, err
+	}
 
 	cb := connect_backup.ConnectBackup{ConnectInstance: *result.Instance,
 		Svc:       svc,
