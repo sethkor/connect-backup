@@ -36,4 +36,5 @@ const (
 	Prompts                ConnectElement = "prompts"
 	HoursOfOperation       ConnectElement = "hours-of-operation"
 	QuickConnects          ConnectElement = "quick-connects"
+	Queues                 ConnectElement = "queues"
 )

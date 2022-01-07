@@ -75,6 +75,8 @@ func buildPrefix(separator string, result interface{}) (string, error) {
 		objectPrefix = string(QuickConnects) + separator + string(QuickConnects) + jsonExtn
 	case connect.HierarchyStructure:
 		objectPrefix = common + separator + string(UserHierarchyStructure) + jsonExtn
+	case connect.Queue:
+		objectPrefix = string(Queues) + separator + *result.(connect.Queue).Name + jsonExtn
 	default:
 		return "", errors.New("unexpected type passed to writer")
 	}
@@ -142,13 +144,18 @@ func (fw *FileWriter) init(instance string) error {
 	if err != nil {
 		return err
 	}
+	err = os.MkdirAll(fw.path+string(Queues), 0744)
+	if err != nil {
+		return err
+	}
 	err = os.MkdirAll(fw.path+common, 0744)
 	return err
 }
 
 func (s3w *S3Writer) init(instance string) error {
-	s3w.path = s3w.Destination.Path + "/" + instance + "/"
 	s3w.separator = "/"
+	s3w.path = s3w.Destination.Path + s3w.separator + instance + s3w.separator
+
 	return nil
 }
 

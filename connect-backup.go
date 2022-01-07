@@ -280,6 +280,33 @@ func (cb ConnectBackup) backupQuickConnects() error {
 	return err
 }
 
+func (cb ConnectBackup) backupQueues() error {
+	log.Println("Backing up Queue")
+
+	err := cb.Svc.ListQueuesPages(&connect.ListQueuesInput{
+		InstanceId: cb.ConnectInstance.Id,
+	}, func(output *connect.ListQueuesOutput, b bool) bool {
+
+		for _, v := range output.QueueSummaryList {
+			if *v.QueueType != "AGENT" {
+				result, err := cb.Svc.DescribeQueue(&connect.DescribeQueueInput{
+					InstanceId: cb.ConnectInstance.Id,
+					QueueId:    v.Id,
+				})
+
+				if err != nil {
+					log.Println("Error Describing Queue "+*v.Id, " "+*v.Name)
+					continue
+				}
+
+				err = cb.TheWriter.write(*result.Queue)
+			}
+		}
+		return true
+	})
+	return err
+}
+
 func (cb ConnectBackup) backupItems() {
 
 	var err error = nil
@@ -324,7 +351,11 @@ func (cb ConnectBackup) backupItems() {
 		log.Print("Error backing up Hierarchy Structure")
 		log.Println(err)
 	}
-
+	err = cb.backupQueues()
+	if err != nil {
+		log.Print("Error backing up Queues")
+		log.Println(err)
+	}
 }
 
 func (cb ConnectBackup) Backup() error {

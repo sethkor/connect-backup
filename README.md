@@ -98,6 +98,7 @@ the stack.
 - [X] Prompt Data (But not any wav files)
 - [X] Hours of Operation
 - [X] Quick Connects
+- [X] Queues (except the default AGENT queue)
 
 For contact flows, the actual flow is a json object encapsulated within the connect json flow object.  If you wish to export also just
 the flow as a json object, pass the `--flows-raw` flag and it will write the contact flow itself as a seperate json in 
@@ -190,8 +191,10 @@ is lest as `*` to cover the use case of backing up all connect instances, but th
                 - connect:ListUsers
                 - connect:ListPrompts
                 - connect:ListHoursOfOperations
+                - connect:ListQueues
                 - connect:DescribeUserHierarchyStructure
                 - connect:DescribeInstance
+                - connect:DescribeQueue
               Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/*"
 #              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}"
             - Effect: Allow
