@@ -58,7 +58,7 @@ make lambda
 make sam-deploy
 ```
 
-You must trigger the lambda with an event json that contains the connect instance id and S3 bucket URL like this:
+You can either set environment variables for the lambda or trigger the lambda with an event json that contains the connect instance id and S3 bucket URL like this:
 ```
 {
   "ConnectInstanceId": "your-AWS-connect-instance-id",
@@ -68,7 +68,10 @@ You must trigger the lambda with an event json that contains the connect instanc
 ```
 
 `FlowsRaw`, which is  boolean and doesn't need quotes, follows the same logic as `--flows-raw` on the command line (see below) where the contact flow is also written 
-to it's own file in S3 with pretty print json.
+to it's own file in S3 with pretty print json.  If the value is omitted it is treated as false.
+
+`ConnectInstanceId` is only required if you wish to backup a specific connect instance.  Omitting this will backup all 
+instances (IAM policy permitting).
 
 The sam template in `lambda/template.yaml` contains a single sample `AWS::Events::Rule` with an Input that constructs 
 this JSON.  You can add additional `AWS::Events::Rule` to back up other connect instances (or the same one to different 
@@ -108,12 +111,18 @@ your-connect-backup-workspace
        ├──common
        ├──flows
        ├──flows-raw
+       ├──hours-of-operation
+       ├──prompts
+       ├──quick-connects
+       ├──routing-profile-queues
        ├──routing-profiles
-       ├──users
-       └──user-hierarchy-groups
+       ├──user-hierarchy-groups
+       └──users
 ````
 
 If you wish to only backup or export a single contact flow, pass `--flow-name` to the backup comand.
+
+The default behaviour is to backup every connect instance found unless you specify an instance with `--instance`
 
 ## What about Queues?
 Currently, there is no API call to describe or create queues.  When the API becomes available, I'll add it.
@@ -143,6 +152,8 @@ flag.  The password will be set to a very random long string (64chars, Caps and 
 Which won't be returned.  You will have to instruct the user to go through the password reset process to reset it.  If the
 user already exists the user will not be recreated or updated.
 
+Further enhancements for restoration, including restoration between instances is WIP.
+
 ## Renaming all the contact flows
 AWS Connect won't let you delete any contact flows. Ever.  Also every new instance you create comes with a bunch of example 
 contact flows you can never delete either.  This leads to your contact flow workspace jumbling up the contact flows you
@@ -154,16 +165,77 @@ to use) which will mean it will sort the renamed flows at the bottom.  You can r
 instance or any time after.  As the Name is really only metadata, renaming flows won't impact any references or live call flows.
 
 ## IAM Policy
-You will need to be granted access to the following:
-* sts:GetCallerIdentity
-* TBC
+You will need the following IAM access ata minimum.  The Lambda example deploys this policy for you.  The resource scope
+is lest as `*` to cover the use case of backing up all connect instances, but the scope can be limited to a particular instance only (as per the comments below).
 
+```
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:PutObjectACL
+              Resource: !GetAtt s3Bucket.Arn
+            - Effect: Allow
+              Action:
+                - ds:DescribeDirectories
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - connect:ListInstances
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - connect:ListContactFlow
+                - connect:ListRoutingProfiles
+                - connect:ListUserHierarchyGroups
+                - connect:ListUsers
+                - connect:ListPrompts
+                - connect:ListHoursOfOperations
+                - connect:DescribeUserHierarchyStructure
+                - connect:DescribeInstance
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/*"
+#              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}"
+            - Effect: Allow
+              Action:
+                - connect:DescribeContactFlow
+                - connect:ListContactFlows
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/*/contact-flow/*"
+#              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/contact-flow/*"
+            - Effect: Allow
+              Action:
+                - connect:DescribeUser
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/*/agent/*"
+#              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/agent/*"
+            - Effect: Allow
+              Action:
+                - connect:DescribeRoutingProfile
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/*/routing-profile/*"
+#              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/routing-profile/*"
+            - Effect: Allow
+              Action:
+                - connect:DescribeUserHierarchyGroup
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/*/agent-group/*"
+#              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/agent-group/*"
+            - Effect: Allow
+              Action:
+                - connect:ListQuickConnects
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/*/transfer-destination/*"
+#              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/transfer-destination/*"
+            - Effect: Allow
+              Action:
+                - connect:DescribeHoursOfOperation
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/*/operating-hours/*"
+ #             Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/operating-hours/*"
+ ```
 ## FAQ
 #### Can I take a backup json and restore it manually via the AWS Connect Console?
 No.  The export/import function on the console supports a completley different format to the AWs API leveraged by `connect-backup`
 
 #### How about restoring a call flow export taken manually from the AWS Connect Console?
 No.  Like the question above, the formats are very different.
+
+#### Can I restore to a different connect instance as the source?
+No, not yet anyway.  AWS Connect objects have a lot of ARN's that need to be manipulated plus some intelligence to
+correlate a few things.  This is a WIP but requires _A LOT_ of work.
 
 #### Can I back-up and restore saved flows?
 No.  Only published flows can be operated on.  This is a limitation of the AWS API.

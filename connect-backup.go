@@ -228,7 +228,7 @@ func (cb ConnectBackup) backupPrompts() error {
 		InstanceId: cb.ConnectInstance.Id,
 	})
 
-	_ = cb.TheWriter.writeList(string(Prompts)+"s", result.PromptSummaryList)
+	_ = cb.TheWriter.writeList(string(Prompts), result.PromptSummaryList)
 	return err
 
 }
@@ -280,38 +280,88 @@ func (cb ConnectBackup) backupQuickConnects() error {
 	return err
 }
 
-func (cb ConnectBackup) Backup() error {
+func (cb ConnectBackup) backupItems() {
 
-	err := cb.backupPrompts()
+	var err error = nil
+
+	err = cb.backupPrompts()
 	if err != nil {
-		return err
+		log.Print("Error backing up Prompts")
+		log.Println(err)
 	}
 	err = cb.backupHours()
 	if err != nil {
-		return err
+		log.Print("Error backing up Operating Hours")
+		log.Println(err)
 	}
 	err = cb.backupQuickConnects()
 	if err != nil {
-		return err
+		log.Print("Error backing up Quick Connects")
+		log.Println(err)
 	}
 	err = cb.backupFlows()
 	if err != nil {
-		return err
+		log.Print("Error backing up Flows")
+		log.Println(err)
 	}
 	err = cb.backupUsers()
 	if err != nil {
-		return err
+		log.Print("Error backing up Users")
+		log.Println(err)
 	}
 	err = cb.backupRoutingProfile()
 	if err != nil {
-		return err
+		log.Print("Error backing up Routing Profiles")
+		log.Println(err)
 	}
 	err = cb.backupUserHierarchyGroups()
 	if err != nil {
-		return err
+		log.Print("Error backing up Hierarchy Groups")
+		log.Println(err)
 	}
 	err = cb.backupUserHierarchyStructure()
+	if err != nil {
+		log.Print("Error backing up Hierarchy Structure")
+		log.Println(err)
+	}
 
+}
+
+func (cb ConnectBackup) Backup() error {
+
+	var err error = nil
+
+	var found bool = false
+	if *cb.ConnectInstance.Id != "" {
+		err = cb.Svc.ListInstancesPages(&connect.ListInstancesInput{}, func(output *connect.ListInstancesOutput, b bool) bool {
+
+			for _, v := range output.InstanceSummaryList {
+				if *cb.ConnectInstance.Id == *v.Id {
+					log.Println("Backing up instance " + *v.InstanceAlias + ", " + *v.Id)
+					err = cb.TheWriter.init(*cb.ConnectInstance.Id)
+					cb.backupItems()
+					found = true
+				}
+			}
+			return true
+		})
+
+		if !found {
+			log.Println("Instance ID passed was not found")
+		}
+
+	} else {
+		err = cb.Svc.ListInstancesPages(&connect.ListInstancesInput{}, func(output *connect.ListInstancesOutput, b bool) bool {
+
+			for _, v := range output.InstanceSummaryList {
+				log.Println("Backing up instance " + *v.InstanceAlias + ", " + *v.Id)
+				cb.ConnectInstance.Id = v.Id
+				err = cb.TheWriter.init(*cb.ConnectInstance.Id)
+				cb.backupItems()
+			}
+			return true
+		})
+	}
 	return err
 }
 

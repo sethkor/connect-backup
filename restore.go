@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/url"
+	"os"
 	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -216,7 +217,7 @@ func (cr ConnectRestore) restoreRoutingProfile() error {
 
 		cr.NewName = *theProfile.RoutingProfileId
 		if cr.location == fileSource {
-			cr.Source = filepath.Dir(filepath.Dir(cr.Source)) + pathSeparator + string(RoutingProfileQueues) + "s/" + *theProfile.RoutingProfileId + jsonExtn
+			cr.Source = filepath.Dir(filepath.Dir(cr.Source)) + string(os.PathSeparator) + string(RoutingProfileQueues) + "s/" + *theProfile.RoutingProfileId + jsonExtn
 		} else {
 			newPath := filepath.Dir(filepath.Dir(cr.url.Path)) + string(RoutingProfileQueues) + "s/" + *theProfile.RoutingProfileId + jsonExtn
 			cr.Source = "s3://" + cr.url.Host + newPath
