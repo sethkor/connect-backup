@@ -307,10 +307,32 @@ func (cb ConnectBackup) backupQueues() error {
 	return err
 }
 
+func (cb ConnectBackup) backupInstance() error {
+	log.Println("Backing up Instance")
+
+	result, err := cb.Svc.DescribeInstance(&connect.DescribeInstanceInput{
+		InstanceId: cb.ConnectInstance.Id,
+	})
+
+	if err != nil {
+		log.Println("error Descrining instance " + *cb.ConnectInstance.Id)
+		return err
+	}
+
+	err = cb.TheWriter.write(*result.Instance)
+
+	return err
+}
+
 func (cb ConnectBackup) backupItems() {
 
 	var err error = nil
 
+	err = cb.backupInstance()
+	if err != nil {
+		log.Print("Error backing up Prompts")
+		log.Println(err)
+	}
 	err = cb.backupPrompts()
 	if err != nil {
 		log.Print("Error backing up Prompts")

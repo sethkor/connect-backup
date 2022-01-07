@@ -77,6 +77,8 @@ func buildPrefix(separator string, result interface{}) (string, error) {
 		objectPrefix = common + separator + string(UserHierarchyStructure) + jsonExtn
 	case connect.Queue:
 		objectPrefix = string(Queues) + separator + *result.(connect.Queue).Name + jsonExtn
+	case connect.Instance:
+		objectPrefix = common + separator + string(Instance) + jsonExtn
 	default:
 		return "", errors.New("unexpected type passed to writer")
 	}
