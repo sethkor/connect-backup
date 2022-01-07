@@ -77,17 +77,19 @@ func HandleRequest(ctx context.Context, backupRequest Request) (Response, error)
 	}
 	log.Println("FlowsRaw : " + strconv.FormatBool(flowsRaw))
 
-	connectSvc := connect.New(sess)
-	result, err := connectSvc.DescribeInstance(&connect.DescribeInstanceInput{
-		InstanceId: &instanceId,
-	})
+	//connectSvc := connect.New(sess)
+	//result, err := connectSvc.DescribeInstance(&connect.DescribeInstanceInput{
+	//	InstanceId: &instanceId,
+	//})
+	//
+	//if err != nil {
+	//	log.Println("Could not fetch the instance specified")
+	//	return Response{Answer: "Could not fetch the instance specified"}, err
+	//}
 
-	if err != nil {
-		log.Println("Could not fetch the instance specified")
-		return Response{Answer: "Could not fetch the instance specified"}, err
-	}
-
-	cb := connect_backup.ConnectBackup{ConnectInstance: *result.Instance,
+	cb := connect_backup.ConnectBackup{ConnectInstance: connect.Instance{
+		Id: &instanceId,
+	},
 		Svc:       svc,
 		TheWriter: &connect_backup.S3Writer{Destination: *s3Url, Sess: sess},
 		RawFlow:   flowsRaw,

@@ -13,7 +13,7 @@ var (
 	app       = kingpin.New("connect-backup", "A tool to backup and restore your AWS Connect instance")
 	pProfile  = app.Flag("profile", "AWS credentials/config file profile to use").String()
 	pRegion   = app.Flag("region", "AWS region").String()
-	pInstance = app.Flag("instance", "The AWS Connect instance id to backup").Required().String()
+	pInstance = app.Flag("instance", "The AWS Connect instance id to backup").String()
 
 	pBackupCommand = app.Command("backup", "Backup your instance")
 	pFile          = pBackupCommand.Flag("file", "Write output to file with the provided path").ExistingDir()
@@ -53,36 +53,27 @@ func main() {
 	var err error
 	sess := connect_backup.GetAwsSession(*pProfile, *pRegion)
 
-	//Validate the instance id
-	connectSvc := connect.New(sess)
-	result, err := connectSvc.DescribeInstance(&connect.DescribeInstanceInput{
-		InstanceId: pInstance,
-	})
-
-	if err != nil {
-		log.Println("Connect Instance not found in this account.  This may also be an IAM permissions issue")
-		log.Fatal(err)
-	}
-
 	switch command {
 	case pBackupCommand.FullCommand():
 		var theWriter connect_backup.Writer = &connect_backup.StdoutWriter{}
 		if *pFile != "" {
-			theWriter = &connect_backup.FileWriter{Path: *pFile + string(os.PathSeparator) + *result.Instance.Id}
-			err := theWriter.(*connect_backup.FileWriter).InitDirs(*result.Instance.Id)
-			if err != nil {
-				log.Println("Could not initialise the destination folders")
-				log.Fatal(err)
+			theWriter = &connect_backup.FileWriter{
+				BasePath: *pFile + string(os.PathSeparator),
 			}
 		} else if *pS3 != nil {
-			theWriter = &connect_backup.S3Writer{Destination: *(*pS3), Sess: sess}
+			theWriter = &connect_backup.S3Writer{
+				Destination: *(*pS3),
+				Sess:        sess,
+			}
 		}
 
 		cb := connect_backup.ConnectBackup{
-			ConnectInstance: *result.Instance,
-			TheWriter:       theWriter,
-			Svc:             connect.New(sess),
-			RawFlow:         *pRawFlow,
+			ConnectInstance: connect.Instance{
+				Id: pInstance,
+			},
+			TheWriter: theWriter,
+			Svc:       connect.New(sess),
+			RawFlow:   *pRawFlow,
 		}
 
 		if *pFlowName == "" {
@@ -103,6 +94,15 @@ func main() {
 		err = cr.Restore()
 
 	case pRenameFlowsCommand.FullCommand():
+		connectSvc := connect.New(sess)
+		result, err := connectSvc.DescribeInstance(&connect.DescribeInstanceInput{
+			InstanceId: pInstance,
+		})
+
+		if err != nil {
+			log.Println("Connect Instance not found in this account.  This may also be an IAM permissions issue")
+			log.Fatal(err)
+		}
 		cb := connect_backup.ConnectBackup{
 			ConnectInstance: *result.Instance,
 			Svc:             connect.New(sess),

@@ -61,6 +61,7 @@ Resources:
         Variables:
           CONNECT_INSTANCE_ID: !Ref connectInstanceId #The AWS Connect Instance ID
           S3_DEST_URL: !Sub "s3://${s3Bucket}" #The S3 destination for the backup as a URL e.g. s3://your-backup-bucket/prefix
+      #if you are only backing up a single instance, the resource scope can be tightened as per the commented out examples
       Policies:
         - AWSLambdaExecute # Managed Policy
         - Version: '2012-10-17' # Policy Document
@@ -76,6 +77,10 @@ Resources:
               Resource: "*"
             - Effect: Allow
               Action:
+                - connect:ListInstances
+              Resource: "*"
+            - Effect: Allow
+              Action:
                 - connect:ListContactFlow
                 - connect:ListRoutingProfiles
                 - connect:ListUserHierarchyGroups
@@ -84,32 +89,39 @@ Resources:
                 - connect:ListHoursOfOperations
                 - connect:DescribeUserHierarchyStructure
                 - connect:DescribeInstance
-              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}"
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/*"
+#              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}"
             - Effect: Allow
               Action:
                 - connect:DescribeContactFlow
                 - connect:ListContactFlows
-              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/contact-flow/*"
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/*/contact-flow/*"
+#              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/contact-flow/*"
             - Effect: Allow
               Action:
                 - connect:DescribeUser
-              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/agent/*"
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/*/agent/*"
+#              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/agent/*"
             - Effect: Allow
               Action:
                 - connect:DescribeRoutingProfile
-              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/routing-profile/*"
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/*/routing-profile/*"
+#              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/routing-profile/*"
             - Effect: Allow
               Action:
                 - connect:DescribeUserHierarchyGroup
-              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/agent-group/*"
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/*/agent-group/*"
+#              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/agent-group/*"
             - Effect: Allow
               Action:
                 - connect:ListQuickConnects
-              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/transfer-destination/*"
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/*/transfer-destination/*"
+#              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/transfer-destination/*"
             - Effect: Allow
               Action:
                 - connect:DescribeHoursOfOperation
-              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/operating-hours/*"
+              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/*/operating-hours/*"
+ #             Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}/operating-hours/*"
 
 # If you are using S3 endpoints and need your lambda to use a local IP use the commented items below.  Just replace the
 # Security group and subnet ids with your own.

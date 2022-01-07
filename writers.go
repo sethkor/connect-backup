@@ -22,63 +22,74 @@ type Writer interface {
 	write(result interface{}) error
 	writeList(name string, result interface{}) error
 	writeFlowString(name string, flow string) error
+	init(instance string) error
 }
 
 type FileWriter struct {
-	Path string
+	BasePath string
+	//	path      string
+	BaseWriter
 }
 
 type S3Writer struct {
 	Destination url.URL
-	Sess        *session.Session
+	//	path        string
+	Sess *session.Session
+	BaseWriter
 }
 
 type StdoutWriter struct {
+	BaseWriter
+}
+
+type BaseWriter struct {
+	path      string
+	separator string
 }
 
 const (
 	common = "common"
 	//unknown       = "unknown"
-	pathSeparator = string(os.PathSeparator)
-	jsonExtn      = ".json"
+	//pathSeparator = string(os.PathSeparator)
+	jsonExtn = ".json"
 )
 
-func buildPrefix(result interface{}) (string, error) {
+func buildPrefix(separator string, result interface{}) (string, error) {
 
 	var objectPrefix string
 
 	switch result.(type) {
 	case connect.ContactFlow:
-		objectPrefix = string(Flows) + "/" + *result.(connect.ContactFlow).Name + jsonExtn
+		objectPrefix = string(Flows) + separator + *result.(connect.ContactFlow).Name + jsonExtn
 	case connect.RoutingProfile:
-		objectPrefix = string(RoutingProfiles) + "/" + *result.(connect.RoutingProfile).Name + jsonExtn
+		objectPrefix = string(RoutingProfiles) + separator + *result.(connect.RoutingProfile).Name + jsonExtn
 	case backupRoutingProfileQueueSummary:
-		objectPrefix = string(RoutingProfileQueues) + "/" + result.(backupRoutingProfileQueueSummary).routingProfile + jsonExtn
+		objectPrefix = string(RoutingProfileQueues) + separator + result.(backupRoutingProfileQueueSummary).routingProfile + jsonExtn
 	case connect.User:
-		objectPrefix = string(Users) + "/" + *result.(connect.User).Username + jsonExtn
+		objectPrefix = string(Users) + separator + *result.(connect.User).Username + jsonExtn
 	case connect.HierarchyGroup:
-		objectPrefix = string(UserHierarchyGroups) + "/" + *result.(connect.HierarchyGroup).Name + jsonExtn
+		objectPrefix = string(UserHierarchyGroups) + separator + *result.(connect.HierarchyGroup).Name + jsonExtn
 	case connect.HoursOfOperation:
-		objectPrefix = string(HoursOfOperation) + "/" + *result.(connect.HoursOfOperation).Name + jsonExtn
+		objectPrefix = string(HoursOfOperation) + separator + *result.(connect.HoursOfOperation).Name + jsonExtn
 	case []*connect.QuickConnectSummary:
-		objectPrefix = string(QuickConnects) + "/" + string(QuickConnects) + jsonExtn
+		objectPrefix = string(QuickConnects) + separator + string(QuickConnects) + jsonExtn
 	case connect.HierarchyStructure:
-		objectPrefix = common + "/" + string(UserHierarchyStructure) + jsonExtn
+		objectPrefix = common + separator + string(UserHierarchyStructure) + jsonExtn
 	default:
 		return "", errors.New("unexpected type passed to writer")
 	}
 	return objectPrefix, nil
 }
 
-func buildPrefixList(name string, result interface{}) (string, error) {
+func buildPrefixList(name string, separator string, result interface{}) (string, error) {
 
 	var objectPrefix string
 
 	switch result.(type) {
 	case []*connect.RoutingProfileQueueConfigSummary:
-		objectPrefix = string(RoutingProfileQueues) + "/" + name + jsonExtn
+		objectPrefix = string(RoutingProfileQueues) + separator + name + jsonExtn
 	case []*connect.PromptSummary:
-		objectPrefix = string(Prompts) + "/" + name + jsonExtn
+		objectPrefix = string(Prompts) + separator + name + jsonExtn
 	default:
 		return "", errors.New("unexpected type passed to writer")
 	}
@@ -91,46 +102,59 @@ func prettyJSON(flow string) (bytes.Buffer, error) {
 	return prettyJSON, err
 }
 
-func (fw *FileWriter) InitDirs(instanceId string) error {
+func (fw *FileWriter) init(instance string) error {
 	//ensure the needed child dirs are present
-	err := os.MkdirAll(fw.Path+pathSeparator+string(Flows), 0744)
+	fw.separator = string(os.PathSeparator)
+	fw.path = fw.BasePath + fw.separator + instance + fw.separator
+	err := os.MkdirAll(fw.path+string(Flows), 0744)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(fw.Path+pathSeparator+string(FlowsRaw), 0744)
+	err = os.MkdirAll(fw.path+string(FlowsRaw), 0744)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(fw.Path+pathSeparator+string(RoutingProfiles), 0744)
+	err = os.MkdirAll(fw.path+string(RoutingProfiles), 0744)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(fw.Path+pathSeparator+string(RoutingProfileQueues), 0744)
+	err = os.MkdirAll(fw.path+string(RoutingProfileQueues), 0744)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(fw.Path+pathSeparator+string(Users), 0744)
+	err = os.MkdirAll(fw.path+string(Users), 0744)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(fw.Path+pathSeparator+string(UserHierarchyGroups), 0744)
+	err = os.MkdirAll(fw.path+string(UserHierarchyGroups), 0744)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(fw.Path+pathSeparator+string(Prompts), 0744)
+	err = os.MkdirAll(fw.path+string(Prompts), 0744)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(fw.Path+pathSeparator+string(HoursOfOperation), 0744)
+	err = os.MkdirAll(fw.path+string(HoursOfOperation), 0744)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(fw.Path+pathSeparator+string(QuickConnects), 0744)
+	err = os.MkdirAll(fw.path+string(QuickConnects), 0744)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(fw.Path+pathSeparator+common, 0744)
+	err = os.MkdirAll(fw.path+common, 0744)
 	return err
+}
+
+func (s3w *S3Writer) init(instance string) error {
+	s3w.path = s3w.Destination.Path + "/" + instance + "/"
+	s3w.separator = "/"
+	return nil
+}
+
+func (fw *StdoutWriter) init(instance string) error {
+	fw.path = string(os.PathSeparator)
+	return nil
 }
 
 //As some AWS connect elements are listed and don't have unique ids, we need to sometimes pass a name around
@@ -143,44 +167,44 @@ func (fw *FileWriter) writeRawFile(fileName string, result interface{}) error {
 		return err
 	}
 
-	return ioutil.WriteFile(fw.Path+string(os.PathSeparator)+fileName, json, 0644)
+	return ioutil.WriteFile(fileName, json, 0644)
 }
 
 func (fw *FileWriter) writeList(name string, result interface{}) error {
 	//for each contact flow, write to a file with the name contact flow.
 
-	filePrefix, err := buildPrefixList(name, result)
+	filePrefix, err := buildPrefixList(name, fw.separator, result)
 
 	if err != nil {
 		return err
 	}
 
-	return fw.writeRawFile(filePrefix, result)
+	return fw.writeRawFile(fw.path+filePrefix, result)
 }
 
 func (fw *FileWriter) write(result interface{}) error {
 	//for each contact flow, write to a file with the name contact flow.
 
-	filePrefix, err := buildPrefix(result)
+	filePrefix, err := buildPrefix(fw.separator, result)
 
 	if err != nil {
 		return err
 	}
 
-	return fw.writeRawFile(filePrefix, result)
+	return fw.writeRawFile(fw.path+filePrefix, result)
 }
 
 func (fw *FileWriter) writeFlowString(fileName string, flow string) error {
 	//for each contact flow, write to a file with the name contact flow.
 
-	filePrefix := string(FlowsRaw) + "/" + fileName + jsonExtn
+	filePrefix := string(FlowsRaw) + fw.separator + fileName + jsonExtn
 
 	prettyString, err := prettyJSON(flow)
 	if err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(fw.Path+string(os.PathSeparator)+filePrefix, prettyString.Bytes(), 0644)
+	return ioutil.WriteFile(fw.path+fw.separator+filePrefix, prettyString.Bytes(), 0644)
 }
 
 func (s3w *S3Writer) writeRawObj(objectPrefix string, result interface{}) error {
@@ -200,14 +224,14 @@ func (s3w *S3Writer) writeRawObj(objectPrefix string, result interface{}) error 
 		ACL:    aws.String(s3.ObjectCannedACLBucketOwnerFullControl),
 		Bucket: aws.String(s3w.Destination.Host),
 		Body:   bytes.NewReader(json),
-		Key:    aws.String(s3w.Destination.Path + "/" + objectPrefix),
+		Key:    aws.String(s3w.path + s3w.separator + objectPrefix),
 	})
 
 	return err
 }
 
 func (s3w *S3Writer) write(result interface{}) error {
-	objectPrefix, err := buildPrefix(result)
+	objectPrefix, err := buildPrefix(s3w.separator, result)
 
 	if err != nil {
 		return err
@@ -217,7 +241,7 @@ func (s3w *S3Writer) write(result interface{}) error {
 }
 
 func (s3w *S3Writer) writeList(name string, result interface{}) error {
-	objectPrefix, err := buildPrefixList(name, result)
+	objectPrefix, err := buildPrefixList(name, s3w.separator, result)
 
 	if err != nil {
 		return err
@@ -229,7 +253,7 @@ func (s3w *S3Writer) writeList(name string, result interface{}) error {
 func (s3w *S3Writer) writeFlowString(fileName string, flow string) error {
 	//for each contact flow, write to a file with the name contact flow.
 
-	objectPrefix := string(FlowsRaw) + "/" + fileName + jsonExtn
+	objectPrefix := string(FlowsRaw) + s3w.separator + fileName + jsonExtn
 
 	if s3w.Destination.Scheme != "s3" {
 		return errors.New("URL passes is not for S3")
@@ -246,7 +270,7 @@ func (s3w *S3Writer) writeFlowString(fileName string, flow string) error {
 		ACL:    aws.String(s3.ObjectCannedACLBucketOwnerFullControl),
 		Bucket: aws.String(s3w.Destination.Host),
 		Body:   bytes.NewReader(prettyString.Bytes()),
-		Key:    aws.String(s3w.Destination.Path + "/" + objectPrefix),
+		Key:    aws.String(s3w.path + "/" + objectPrefix),
 	})
 
 	return err
