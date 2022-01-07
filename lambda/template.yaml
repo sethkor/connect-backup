@@ -88,6 +88,7 @@ Resources:
                 - connect:ListPrompts
                 - connect:ListHoursOfOperations
                 - connect:ListQueues
+                - connect:ListLambdaFunctions
                 - connect:DescribeUserHierarchyStructure
                 - connect:DescribeInstance
                 - connect:DescribeQueue

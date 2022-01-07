@@ -280,6 +280,22 @@ func (cb ConnectBackup) backupQuickConnects() error {
 	return err
 }
 
+func (cb ConnectBackup) backupLambdas() error {
+	log.Println("Backing up Lambdas")
+
+	var allOutputs lambdaStrings
+	err := cb.Svc.ListLambdaFunctionsPages(&connect.ListLambdaFunctionsInput{
+		InstanceId: cb.ConnectInstance.Id,
+	}, func(output *connect.ListLambdaFunctionsOutput, b bool) bool {
+
+		allOutputs = append(allOutputs, output.LambdaFunctions...)
+		return true
+	})
+
+	_ = cb.TheWriter.write(allOutputs)
+	return err
+}
+
 func (cb ConnectBackup) backupQueues() error {
 	log.Println("Backing up Queue")
 
@@ -326,11 +342,16 @@ func (cb ConnectBackup) backupInstance() error {
 
 func (cb ConnectBackup) backupItems() {
 
-	var err error = nil
+	var err error
 
 	err = cb.backupInstance()
 	if err != nil {
 		log.Print("Error backing up Prompts")
+		log.Println(err)
+	}
+	err = cb.backupLambdas()
+	if err != nil {
+		log.Print("Error backing up Lambdas")
 		log.Println(err)
 	}
 	err = cb.backupPrompts()
