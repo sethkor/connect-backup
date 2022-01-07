@@ -87,8 +87,10 @@ Resources:
                 - connect:ListUsers
                 - connect:ListPrompts
                 - connect:ListHoursOfOperations
+                - connect:ListQueues
                 - connect:DescribeUserHierarchyStructure
                 - connect:DescribeInstance
+                - connect:DescribeQueue
               Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/*"
 #              Resource: !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${connectInstanceId}"
             - Effect: Allow
