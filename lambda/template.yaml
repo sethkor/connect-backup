@@ -89,6 +89,7 @@ Resources:
                 - connect:ListHoursOfOperations
                 - connect:ListQueues
                 - connect:ListLambdaFunctions
+                - connect:ListLexBots
                 - connect:DescribeUserHierarchyStructure
                 - connect:DescribeInstance
                 - connect:DescribeQueue

@@ -192,10 +192,14 @@ func (cb ConnectBackup) backupRoutingProfile() error {
 			err = cb.TheWriter.write(*result.RoutingProfile)
 
 			if err != nil {
-				log.Fatal("Failed to write to the destination")
+				log.Println("Failed to write to the destination")
 			}
 
 			err = cb.backupRoutingProfileQueues(*result.RoutingProfile.RoutingProfileId)
+
+			if err != nil {
+				log.Println("Failed to backup Routing Profile Queues " + *result.RoutingProfile.RoutingProfileId)
+			}
 
 		}
 		return true
@@ -296,6 +300,22 @@ func (cb ConnectBackup) backupLambdas() error {
 	return err
 }
 
+func (cb ConnectBackup) backupLex() error {
+	log.Println("Backing up Lex Bots")
+
+	var allOutputs []*connect.LexBot
+	err := cb.Svc.ListLexBotsPages(&connect.ListLexBotsInput{
+		InstanceId: cb.ConnectInstance.Id,
+	}, func(output *connect.ListLexBotsOutput, b bool) bool {
+
+		allOutputs = append(allOutputs, output.LexBots...)
+		return true
+	})
+
+	_ = cb.TheWriter.write(allOutputs)
+	return err
+}
+
 func (cb ConnectBackup) backupQueues() error {
 	log.Println("Backing up Queue")
 
@@ -352,6 +372,11 @@ func (cb ConnectBackup) backupItems() {
 	err = cb.backupLambdas()
 	if err != nil {
 		log.Print("Error backing up Lambdas")
+		log.Println(err)
+	}
+	err = cb.backupLex()
+	if err != nil {
+		log.Print("Error backing up Lex Bots")
 		log.Println(err)
 	}
 	err = cb.backupPrompts()
