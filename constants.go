@@ -38,4 +38,8 @@ const (
 	QuickConnects          ConnectElement = "quick-connects"
 	Queues                 ConnectElement = "queues"
 	Instance               ConnectElement = "instance"
+	Lambdas                ConnectElement = "lambdas"
+	LexBots                ConnectElement = "lex-bots"
 )
+
+type lambdaStrings []*string

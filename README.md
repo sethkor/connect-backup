@@ -101,8 +101,8 @@ the stack.
 - [X] Queues (except the default AGENT queue)
 - [X] Instance
 - [ ] Instance Attributes
-- [ ] Lambdas
-- [ ] Lex Bots
+- [X] Lambda Functions ARN
+- [ ] Lex Bots ARN
 
 For contact flows, the actual flow is a json object encapsulated within the connect json flow object.  If you wish to export also just
 the flow as a json object, pass the `--flows-raw` flag and it will write the contact flow itself as a seperate json in 
@@ -196,6 +196,7 @@ is lest as `*` to cover the use case of backing up all connect instances, but th
                 - connect:ListPrompts
                 - connect:ListHoursOfOperations
                 - connect:ListQueues
+                - connect:ListLambdaFunctions
                 - connect:DescribeUserHierarchyStructure
                 - connect:DescribeInstance
                 - connect:DescribeQueue
