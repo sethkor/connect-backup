@@ -102,7 +102,7 @@ the stack.
 - [X] Instance
 - [ ] Instance Attributes
 - [X] Lambda Functions ARN
-- [ ] Lex Bots ARN
+- [X] Lex Bots ARN (But there seems to be a bug in the AWS API with no results being returned.  It's only in preview)
 
 For contact flows, the actual flow is a json object encapsulated within the connect json flow object.  If you wish to export also just
 the flow as a json object, pass the `--flows-raw` flag and it will write the contact flow itself as a seperate json in 
@@ -128,9 +128,6 @@ your-connect-backup-workspace
 If you wish to only backup or export a single contact flow, pass `--flow-name` to the backup comand.
 
 The default behaviour is to backup every connect instance found unless you specify an instance with `--instance`
-
-## What about Queues?
-Currently, there is no API call to describe or create queues.  When the API becomes available, I'll add it.
 
 ## Restoration
 You can restore AWS Connect elements you have previously backed up:
