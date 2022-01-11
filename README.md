@@ -154,7 +154,24 @@ flag.  The password will be set to a very random long string (64chars, Caps and 
 Which won't be returned.  You will have to instruct the user to go through the password reset process to reset it.  If the
 user already exists the user will not be recreated or updated.
 
-Further enhancements for restoration, including restoration between instances is WIP.
+### Restoring to another connect instance
+You can restore to another connect instance very simple flows using the `--create` flag with a flow name.  Only flows that do not reference any other resources can
+be restored to another instance at the moment.  Referencable resources are:
+- Announcements with wav
+- Lambda functions
+- Queues
+- Lex bots
+- Anything else that has an ARN in it
+
+This might make restoration to another instance seem pointless, most contact flows incorporate at least one of these.  The
+limitation here is that the ARN contains things like the source AWS account, instance id and resource id.  These all need
+to be manipulated before restoration is possible.  I am working on a solution for this at this moment.  It also means the 
+type of resources that are reference must be able to be restored to a different instance too.
+
+Some resources, in particular wav files can never be backed up, AWS Connect does not support this.  Nor is there an API 
+command available to create a new announcement with a WAV file, this can only be done from the AWS console.  Before
+restoring any call flow with a WAV file consider <strong>YOU MUST</strong> manually crate the announcements with the WAV
+via the AWS console.
 
 ## Renaming all the contact flows
 AWS Connect won't let you delete any contact flows. Ever.  Also every new instance you create comes with a bunch of example 
@@ -239,8 +256,7 @@ No.  The export/import function on the console supports a completley different f
 No.  Like the question above, the formats are very different.
 
 #### Can I restore to a different connect instance as the source?
-No, not yet anyway.  AWS Connect objects have a lot of ARN's that need to be manipulated plus some intelligence to
-correlate a few things.  This is a WIP but requires _A LOT_ of work.
+No, not yet anyway.  See [Restoring to another connect instance](#Restoring-to-another-connect-instance)
 
 #### Can I back-up and restore saved flows?
 No.  Only published flows can be operated on.  This is a limitation of the AWS API.
