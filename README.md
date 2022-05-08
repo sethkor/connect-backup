@@ -154,7 +154,7 @@ flag.  The password will be set to a very random long string (64chars, Caps and 
 Which won't be returned.  You will have to instruct the user to go through the password reset process to reset it.  If the
 user already exists the user will not be recreated or updated.
 
-### Restoring to another connect instance
+## Restoring to another connect instance
 You can restore to another connect instance very simple flows using the `--create` flag with a flow name.  Only flows that do not reference any other resources can
 be restored to another instance at the moment.  Referencable resources are:
 - Announcements with wav
@@ -165,13 +165,18 @@ be restored to another instance at the moment.  Referencable resources are:
 
 This might make restoration to another instance seem pointless, most contact flows incorporate at least one of these.  The
 limitation here is that the ARN contains things like the source AWS account, instance id and resource id.  These all need
-to be manipulated before restoration is possible.  I am working on a solution for this at this moment.  It also means the 
+to be manipulated before restoration is possible.  I am working on a solution for this at this moment.  It also means the
 type of resources that are reference must be able to be restored to a different instance too.
 
-Some resources, in particular wav files can never be backed up, AWS Connect does not support this.  Nor is there an API 
+Some resources, in particular wav files can never be backed up, AWS Connect does not support this.  Nor is there an API
 command available to create a new announcement with a WAV file, this can only be done from the AWS console.  Before
 restoring any call flow with a WAV file consider <strong>YOU MUST</strong> manually crate the announcements with the WAV
 via the AWS console.
+
+## Dynamic IDs
+Any dynamic id usage will require the logic you implement to generate the dynamic id to handle the account the id is in and
+the id resource id.  This tool can not assist with this, you should implement your dynamic logic so that it is abstract
+enough to handle this.
 
 ## Renaming all the contact flows
 AWS Connect won't let you delete any contact flows. Ever.  Also every new instance you create comes with a bunch of example 
