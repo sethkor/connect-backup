@@ -351,7 +351,7 @@ func (cb ConnectBackup) backupInstance() error {
 	})
 
 	if err != nil {
-		log.Println("error Descrining instance " + *cb.ConnectInstance.Id)
+		log.Println("error Describing instance " + *cb.ConnectInstance.Id)
 		return err
 	}
 
@@ -360,13 +360,40 @@ func (cb ConnectBackup) backupInstance() error {
 	return err
 }
 
+func (cb ConnectBackup) backupInstanceAttributes() error {
+	log.Println("Backing up Instance Attributes")
+
+	var allOutputs []*connect.Attribute
+	err := cb.Svc.ListInstanceAttributesPages(&connect.ListInstanceAttributesInput{
+		InstanceId: cb.ConnectInstance.Id,
+	}, func(output *connect.ListInstanceAttributesOutput, b bool) bool {
+		//
+		allOutputs = append(allOutputs, output.Attributes...)
+
+		return true
+	})
+
+	if err != nil {
+		log.Println("error Listing Instance Attributes" + *cb.ConnectInstance.Id)
+		return err
+	}
+
+	err = cb.TheWriter.write(allOutputs)
+
+	return err
+}
+
 func (cb ConnectBackup) backupItems() {
 
 	var err error
-
+	err = cb.backupInstanceAttributes()
+	if err != nil {
+		log.Print("Error backing up Instance Attributes")
+		log.Println(err)
+	}
 	err = cb.backupInstance()
 	if err != nil {
-		log.Print("Error backing up Prompts")
+		log.Print("Error backing up Instance")
 		log.Println(err)
 	}
 	err = cb.backupLambdas()

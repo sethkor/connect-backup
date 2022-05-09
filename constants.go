@@ -40,6 +40,7 @@ const (
 	Instance               ConnectElement = "instance"
 	Lambdas                ConnectElement = "lambdas"
 	LexBots                ConnectElement = "lex-bots"
+	Attributes             ConnectElement = "attributes"
 )
 
 type lambdaStrings []*string

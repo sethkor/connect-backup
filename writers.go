@@ -79,6 +79,8 @@ func buildPrefix(separator string, result interface{}) (string, error) {
 		objectPrefix = string(Queues) + separator + *result.(connect.Queue).Name + jsonExtn
 	case connect.Instance:
 		objectPrefix = common + separator + string(Instance) + jsonExtn
+	case []*connect.Attribute:
+		objectPrefix = common + separator + string(Attributes) + jsonExtn
 	case lambdaStrings:
 		objectPrefix = common + separator + string(Lambdas) + jsonExtn
 	case connect.LexBot:
