@@ -100,7 +100,7 @@ the stack.
 - [X] Quick Connects
 - [X] Queues (except the default AGENT queue)
 - [X] Instance
-- [ ] Instance Attributes
+- [X] Instance Attributes
 - [X] Lambda Functions ARN
 - [X] Lex Bots ARN (But there seems to be a bug in the AWS API with no results being returned.  It's only in preview)
 
