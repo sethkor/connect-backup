@@ -61,6 +61,8 @@ func buildPrefix(separator string, result interface{}) (string, error) {
 	switch result.(type) {
 	case connect.ContactFlow:
 		objectPrefix = string(Flows) + separator + *result.(connect.ContactFlow).Name + jsonExtn
+	case connect.ContactFlowModule:
+		objectPrefix = string(FlowModules) + separator + *result.(connect.ContactFlowModule).Name + jsonExtn
 	case connect.RoutingProfile:
 		objectPrefix = string(RoutingProfiles) + separator + *result.(connect.RoutingProfile).Name + jsonExtn
 	case backupRoutingProfileQueueSummary:
@@ -117,6 +119,10 @@ func (fw *FileWriter) init(instance string) error {
 	fw.separator = string(os.PathSeparator)
 	fw.path = fw.BasePath + fw.separator + instance + fw.separator
 	err := os.MkdirAll(fw.path+string(Flows), 0744)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(fw.path+string(FlowModules), 0744)
 	if err != nil {
 		return err
 	}

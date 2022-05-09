@@ -15,6 +15,44 @@ type ConnectBackup struct {
 	ConnectInstance connect.Instance
 }
 
+func (cb ConnectBackup) backupFlowModules() error {
+	log.Println("Backing up Flow Modules")
+	err := cb.Svc.ListContactFlowModulesPages(&connect.ListContactFlowModulesInput{
+		InstanceId: cb.ConnectInstance.Id,
+	}, func(output *connect.ListContactFlowModulesOutput, b bool) bool {
+		for _, v := range output.ContactFlowModulesSummaryList {
+
+			result, err := cb.Svc.DescribeContactFlowModule(&connect.DescribeContactFlowModuleInput{
+				InstanceId:          cb.ConnectInstance.Id,
+				ContactFlowModuleId: v.Id,
+			})
+
+			if err != nil {
+				log.Println("Failed to describe flow module "+(*v).String(), ". ", err)
+				continue
+			}
+
+			err = cb.TheWriter.write(*result.ContactFlowModule)
+
+			if err != nil {
+				log.Fatal("Failed to write flow module object to the destination")
+			}
+
+			if cb.RawFlow {
+				err = cb.TheWriter.writeFlowString(*result.ContactFlowModule.Name, *result.ContactFlowModule.Content)
+
+				if err != nil {
+					log.Fatal("Failed to write flow module string to the destination")
+				}
+			}
+
+		}
+		return true
+	})
+
+	return err
+}
+
 func (cb ConnectBackup) backupFlows() error {
 	log.Println("Backing up Flows")
 	err := cb.Svc.ListContactFlowsPages(&connect.ListContactFlowsInput{
@@ -426,6 +464,13 @@ func (cb ConnectBackup) backupItems() {
 		log.Print("Error backing up Flows")
 		log.Println(err)
 	}
+
+	err = cb.backupFlowModules()
+	if err != nil {
+		log.Print("Error backing up Flow Modules")
+		log.Println(err)
+	}
+
 	err = cb.backupUsers()
 	if err != nil {
 		log.Print("Error backing up Users")
