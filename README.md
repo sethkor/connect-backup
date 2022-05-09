@@ -91,6 +91,7 @@ the stack.
 ## What is included in the backup
 - [X] Published Call Flows (The AWS API restricts this to published flows only)
 - [X] Raw Call flows as json objects without AWS Connect provisioning metadata
+- [X] Flow Modules
 - [X] Routing Profiles including Routing Profile Queues
 - [X] User Data (except Passwords)
 - [X] User Hierarchy Groups

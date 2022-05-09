@@ -27,6 +27,7 @@ type ConnectElement string
 
 const (
 	Flows                  ConnectElement = "flows"
+	FlowModules            ConnectElement = "flows-module"
 	FlowsRaw               ConnectElement = "flows-raw"
 	RoutingProfiles        ConnectElement = "routing-profiles"
 	RoutingProfileQueues   ConnectElement = "routing-profile-queues"
