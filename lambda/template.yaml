@@ -11,6 +11,7 @@ Parameters:
     Type: String
   connectInstanceId:
     Type: String
+    Default: ""
 
 Resources:
   s3Bucket:
